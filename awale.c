@@ -7,10 +7,10 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-typedef struct Score{
+typedef struct Score {
     int player0;
     int player1;
-}Score;
+} Score;
 
 typedef struct Game {
     char* player0;
@@ -18,11 +18,12 @@ typedef struct Game {
     int currentTurn;    // 0 or 1
     Score score;
     int* boardstate;    // 12 slots
-}Game;
+} Game;
 
 int initScore(Score score){
     score.player0 = 0;
     score.player1 = 0;
+    return 0;
 }
 
 Game* initGame(char* player0, char* player1){
@@ -36,4 +37,45 @@ Game* initGame(char* player0, char* player1){
         game->boardstate[i] = 4;
     }
     return game;
+}
+
+int playTurn(Game* game, int slot){
+    int pebbles = movePebbles(game, slot);
+    computeScore(game, slot, pebbles);
+
+    return 0;
+}
+
+int movePebbles(Game* game, int slot){ //
+    int pebbles = game->boardstate[slot];
+    for (int i = 0; i < pebbles;){
+        if((slot + i) % 12 != slot){
+            game->boardstate[(slot + i) % 12]++;
+            i++;
+        }
+    }
+    game->boardstate[slot] = 0;
+
+    return pebbles;
+}
+
+int computeScore(Game* game, int slot, int pebbles){
+    int i = 0;
+    int current = game->currentTurn;
+
+    int lastSlot = (slot + pebbles - i) % 12;
+    int slotScore = game->boardstate[lastSlot];
+
+    while(slotScore == 2 || slotScore == 3){
+        if(current = 0 && lastSlot >= 6){ // in player1's side
+            game->score.player0 += slotScore;
+        } else if(current = 1 && lastSlot < 6){ // in player0's side
+            game->score.player1 += slotScore;
+        }
+
+        i++;
+
+        int lastSlot = (slot + pebbles - i) % 12;
+        int slotScore = game->boardstate[lastSlot];
+    }
 }

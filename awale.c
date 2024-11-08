@@ -18,6 +18,7 @@ typedef struct Game {
     int currentTurn;    // 0 or 1
     Score score;
     int* boardstate;    // 12 slots
+    int status;         // 0 for playing and 1 for ended
 } Game;
 
 int initScore(Score score){
@@ -43,6 +44,15 @@ int playTurn(Game* game, int slot){
     int pebbles = movePebbles(game, slot);
     computeScore(game, slot, pebbles);
 
+    // check victory : if returns 1, the current player won the game through points
+    if(game->currentTurn == 0 && game->score.player0 > 24){
+        return 1;
+    } else if(game->currentTurn == 0 && game->score.player0 > 24){
+        return 1;
+    }
+
+    // switch turn
+    game->currentTurn = (game->currentTurn + 1) % 2;
     return 0;
 }
 
@@ -78,4 +88,6 @@ int computeScore(Game* game, int slot, int pebbles){
         int lastSlot = (slot + pebbles - i) % 12;
         int slotScore = game->boardstate[lastSlot];
     }
+
+    return 0;
 }

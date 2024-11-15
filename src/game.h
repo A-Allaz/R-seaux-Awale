@@ -41,9 +41,9 @@ int init_game(Game *game, char* player0, char* player1) {
 int move_pebbles(Game* game, int slot){
     printf("move_pebbles\n");
     const int pebbles = game->board[slot];
-    printf("pebbles: %d\n", pebbles);
+    printf("pebbles: %d\n", pebbles + 1);
     for (int i = 0; i < pebbles;){
-        if((slot + i) % 12 != slot){
+        if((slot + i + 1) % 12 != slot){
             game->board[(slot + i) % 12]++;
             i++;
         }

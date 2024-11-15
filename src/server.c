@@ -4,6 +4,7 @@
 
 
 #include "game.h"
+#include "utils.h"
 
 int interactive_play(Game *game);
 
@@ -27,9 +28,19 @@ int main() {
 int interactive_play(Game *game) {
     int slot;
     while(game->score.player0 < 25 && game->score.player1 < 25) {
+        clrscr();
+        if(play_turn(game, slot - 1)) {
+            printf("Game is over\n");
+        } else {
+            printf("Game is ON\n");
+        }
+        print_player_stats(game, 0);
+        print_player_stats(game, 1);
         print_board_state(game);
-        printf("player%d's turn :\n", game->currentTurn + 1);
-        printf("Choose a slot (1-12):\n");
+
+        printf("PLAYER%d'S TURN\n", game->currentTurn + 1);
+        printf("=== Choose a slot (1 to 12): ===\n");
+        
         while (1) {
             // Attempt to read an integer
             if (scanf("%d", &slot) == 1 && slot >= 1 && slot <= 12) {
@@ -47,13 +58,6 @@ int interactive_play(Game *game) {
         }
 
         printf("You selected slot %d.\n", slot);
-        if(play_turn(game, slot - 1)) {
-            printf("Game is over\n");
-        } else {
-            printf("Game is still ON\n");
-        }
-        print_player_stats(game, 0);
-        print_player_stats(game, 1);
     }
 
     return 0;

@@ -41,7 +41,7 @@ int init_game(Game *game, char* player0, char* player1) {
 int move_pebbles(Game* game, int slot){
     printf("move_pebbles\n");
     const int pebbles = game->board[slot];
-    printf("pebbles: %d\n", pebbles);
+    printf("pebbles: %d \n", pebbles);
     for (int i = 0; i < pebbles + 1;){
         if((slot + i + 1) % 12 != slot){
             game->board[(slot + i) % 12]++;
@@ -59,13 +59,17 @@ int compute_score(Game* game, int slot, int pebbles){
     int current = game->currentTurn;
 
     int lastSlot = (slot + pebbles - i) % 12;
+    printf("lastSlot: %d \n", lastSlot);
     int slotScore = game->board[lastSlot];
+    printf("slotScore: %d\n", slotScore);
 
     while (slotScore == 2 || slotScore == 3) {
         if (current == 0 && lastSlot >= 6) { // in player1's side
             game->score.player0 += slotScore;
+            game->board[lastSlot] = 0;
         } else if (current == 1 && lastSlot < 6) { // in player0's side
             game->score.player1 += slotScore;
+            game->board[lastSlot] = 0;
         }
 
         i++;
@@ -80,7 +84,7 @@ int compute_score(Game* game, int slot, int pebbles){
 int play_turn(Game* game, int slot){
     printf("play_turn\n");
     int pebbles = move_pebbles(game, slot);
-    printf("pebbles = %d", pebbles);
+    printf("pebbles = %d\n", pebbles);
     compute_score(game, slot, pebbles);
 
     // check victory : if returns 1, the current player won the game through points
@@ -99,16 +103,16 @@ int print_board_state(Game* game) {
     for(int i = 0; i < 6; i++) {
         printf("|\t%d\t", game->board[i]);
         if(i == 5) {
-            printf("|\n");
+            printf("| -- player 1's side --\n");
         }
     }
     for(int i = 6; i < 12; i++) {
         printf("|\t%d\t",game->board[i]);
         if(i == 11) {
-            printf("|\n");
+            printf("| -- player 2's side --\n");
         }
     }
-    printf("\t(7)\t\t(8)\t\t(9)\t\t(10)\t(11)\t(12)\n");
+    printf("\t(7)\t\t(8)\t\t(9)\t\t(10)\t\t(11)\t\t(12)\n");
 }
 
 int print_player_stats(Game *game, int player)

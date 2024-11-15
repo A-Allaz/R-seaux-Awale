@@ -90,7 +90,21 @@ int playTurn(Game* game, int slot){
     return 0;
 }
 
-
+int print_board_state(Game* game) {
+    printf("======= Board State: =======\n");
+    for(int i = 0; i < 6; i++) {
+        printf("|\t%d\t", game->board[i]);
+        if(i == 5) {
+            printf("|\n");
+        }
+    }
+    for(int i = 6; i < 12; i++) {
+        printf("|\t%d\t",game->board[i]);
+        if(i == 11) {
+            printf("|\n");
+        }
+    }
+}
 
 int print_player_stats(Game *game, int player)
 {

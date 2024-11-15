@@ -21,7 +21,7 @@ typedef struct Game {
     int board[12];
 } Game;
 
-int init_score(Game* game) {
+int init_score(Game* game){
     game->score.player0 = 0;
     game->score.player1 = 0;
     return 0;
@@ -38,10 +38,12 @@ int init_game(Game *game, char* player0, char* player1) {
     return 1;
 }
 
-int move_pebbles(Game* game, int slot) { //
-    int pebbles = game->board[slot];
-    for (int i = 0; i < pebbles;) {
-        if ((slot + i) % 12 != slot) {
+int move_pebbles(Game* game, int slot){
+    printf("move_pebbles\n");
+    const int pebbles = game->board[slot];
+    printf("pebbles: %d\n", pebbles);
+    for (int i = 0; i < pebbles;){
+        if((slot + i) % 12 != slot){
             game->board[(slot + i) % 12]++;
             i++;
         }
@@ -51,7 +53,8 @@ int move_pebbles(Game* game, int slot) { //
     return pebbles;
 }
 
-int compute_score(Game* game, int slot, int pebbles) {
+int compute_score(Game* game, int slot, int pebbles){
+    printf("compute-score\n");
     int i = 0;
     int current = game->currentTurn;
 
@@ -75,12 +78,13 @@ int compute_score(Game* game, int slot, int pebbles) {
 }
 
 int play_turn(Game* game, int slot){
+    printf("play_turn\n");
     int pebbles = move_pebbles(game, slot);
+    printf("pebbles = %d", pebbles);
     compute_score(game, slot, pebbles);
 
     // check victory : if returns 1, the current player won the game through points
-    if ((game->currentTurn == 0 && game->score.player0 > 24) ||
-        (game->currentTurn == 1 && game->score.player1 > 24)) {
+    if((game->currentTurn == 0 && game->score.player0 > 24) || (game->currentTurn == 1 && game->score.player0 > 24)){
         return 1;
     }
 

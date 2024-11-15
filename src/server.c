@@ -26,12 +26,12 @@ int main() {
 
 int interactive_play(Game *game) {
     int slot;
-    while(game->score.player0 < 25 || game->score.player1 < 25) {
+    while(game->score.player0 < 25 && game->score.player1 < 25) {
         print_board_state(game);
         printf("player%d's turn :\n", game->currentTurn + 1);
         printf("Choose a slot (1-12):\n");
         while (1) {
-            // Try to read an integer
+            // Attempt to read an integer
             if (scanf("%d", &slot) == 1 && slot >= 1 && slot <= 12) {
                 break;  // Input is valid, break the loop
             } else {
@@ -45,7 +45,15 @@ int interactive_play(Game *game) {
                 printf("Choose a slot (1-12):\n");
             }
         }
-        play_turn(game, slot - 1);
+
+        printf("You selected slot %d.\n", slot);
+        if(play_turn(game, slot - 1)) {
+            printf("Game is over");
+        } else {
+            printf("Game is still ON");
+        }
+        print_player_stats(game, 0);
+        print_player_stats(game, 1);
     }
 
     return 0;

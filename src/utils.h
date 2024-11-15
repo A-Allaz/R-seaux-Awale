@@ -6,3 +6,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+
+void clrscr()
+{
+    system("@cls||clear");
+}

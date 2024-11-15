@@ -40,26 +40,44 @@ int interactive_play(Game *game) {
 
         printf("PLAYER%d'S TURN\n", game->currentTurn + 1);
         printf("=== Choose a slot (1 to 12): ===\n");
+        printf("Surrender (0):\n");
         
         while (1) {
-            // Attempt to read an integer
-            if (scanf("%d", &slot) == 1 && slot >= 1 && slot <= 12) {
-                break;  // Input is valid, break the loop
-            } else {
-                // Clear the invalid input from stdin buffer
+            if (scanf("%d", &slot) != 1 || slot < 0 || slot > 12) {
+            // Clear the invalid input from stdin buffer
+            while (getchar() != '\n');
+            printf("Invalid input! Please enter a number between 0 and 12.\n");
+            continue;  // Skip the rest of the loop
+            }
+
+            // Case : surrender
+            if (slot == 0){
+                int surrender;
+                printf("SURRENDER ? (0: NO / 1: YES):\n");
                 while (getchar() != '\n'); // Flush the input buffer
+                while (1) {
+                    if (scanf("%d", &surrender) == 1 && (surrender == 0 || surrender == 1)) {
+                        break;
+                    } else {
+                        while (getchar() != '\n');
+                        printf("Wrong input, Please enter 0 or 1\n");
+                        printf("SURRENDER ? (0: NO / 1: YES):\n");
+                    }
+                }
+                if (surrender == 1){
+                    // Change game state to over
+                    return 1;
+                } else if(surrender == 0){
+                    break;
+                }
+            }
 
-                // Display an error message
-                printf("Invalid input! Please enter a number between 1 and 12.\n");
-
-                // Prompt for input again
-                printf("Choose a slot (1-12):\n");
+            if(slot >= 1){
+                break;
             }
         }
 
-        // Case : surrender
-
-        printf("You selected slot %d.\n", slot);
+        // printf("You selected slot %d.\n", slot);
     }
 
     return 0;

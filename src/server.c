@@ -48,9 +48,9 @@ int interactive_play(Game *game) {
 
         printf("You selected slot %d.\n", slot);
         if(play_turn(game, slot - 1)) {
-            printf("Game is over");
+            printf("Game is over\n");
         } else {
-            printf("Game is still ON");
+            printf("Game is still ON\n");
         }
         print_player_stats(game, 0);
         print_player_stats(game, 1);

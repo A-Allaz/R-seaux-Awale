@@ -57,6 +57,8 @@ int interactive_play(Game *game) {
             }
         }
 
+        // Case : surrender
+
         printf("You selected slot %d.\n", slot);
     }
 

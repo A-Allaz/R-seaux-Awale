@@ -21,25 +21,27 @@ typedef struct Game {
     int board[12];
 } Game;
 
-int initScore(Game* game){
+int init_score(Game* game){
     game->score.player0 = 0;
     game->score.player1 = 0;
     return 0;
 }
 
-int initGame(Game *game, char* player0, char* player1) {
+int init_game(Game *game, char* player0, char* player1) {
     strcpy(game->player0, player0);
     strcpy(game->player1, player1);
     game->currentTurn = 0;
-    initScore(game);
+    init_score(game);
     for (int i = 0; i < 12; i++){
         game->board[i] = 4;
     }
     return 1;
 }
 
-int movePebbles(Game* game, int slot){ //
-    int pebbles = game->board[slot];
+int move_pebbles(Game* game, int slot){
+    printf("move_pebbles\n");
+    const int pebbles = game->board[slot];
+    printf("pebbles: %d\n", pebbles);
     for (int i = 0; i < pebbles;){
         if((slot + i) % 12 != slot){
             game->board[(slot + i) % 12]++;
@@ -51,7 +53,8 @@ int movePebbles(Game* game, int slot){ //
     return pebbles;
 }
 
-int computeScore(Game* game, int slot, int pebbles){
+int compute_score(Game* game, int slot, int pebbles){
+    printf("compute-score\n");
     int i = 0;
     int current = game->currentTurn;
 
@@ -74,14 +77,14 @@ int computeScore(Game* game, int slot, int pebbles){
     return 0;
 }
 
-int playTurn(Game* game, int slot){
-    int pebbles = movePebbles(game, slot);
-    computeScore(game, slot, pebbles);
+int play_turn(Game* game, int slot){
+    printf("play_turn\n");
+    int pebbles = move_pebbles(game, slot);
+    printf("pebbles = %d", pebbles);
+    compute_score(game, slot, pebbles);
 
     // check victory : if returns 1, the current player won the game through points
-    if(game->currentTurn == 0 && game->score.player0 > 24){
-        return 1;
-    } else if(game->currentTurn == 0 && game->score.player0 > 24){
+    if((game->currentTurn == 0 && game->score.player0 > 24) || (game->currentTurn == 1 && game->score.player0 > 24)){
         return 1;
     }
 
@@ -90,7 +93,23 @@ int playTurn(Game* game, int slot){
     return 0;
 }
 
-
+int print_board_state(Game* game) {
+    printf("======= Board State: =======\n");
+    printf("\t(1)\t\t(2)\t\t(3)\t\t(4)\t\t(5)\t\t(6)\n");
+    for(int i = 0; i < 6; i++) {
+        printf("|\t%d\t", game->board[i]);
+        if(i == 5) {
+            printf("|\n");
+        }
+    }
+    for(int i = 6; i < 12; i++) {
+        printf("|\t%d\t",game->board[i]);
+        if(i == 11) {
+            printf("|\n");
+        }
+    }
+    printf("\t(7)\t\t(8)\t\t(9)\t\t(10)\t(11)\t(12)\n");
+}
 
 int print_player_stats(Game *game, int player)
 {

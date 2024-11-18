@@ -14,9 +14,9 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 # Define the executable target for the main application
 add_executable(awale_server src/server.c cJSON/cJSON.c
         src/game.h
-        src/request.h)
+        src/network.h)
 add_executable(awale_client src/client.c cJSON/cJSON.c
-        src/request.h)
+        src/network.h)
 
 # Include the directory containing headers
 target_include_directories(awale_server PRIVATE src cJSON)

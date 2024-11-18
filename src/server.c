@@ -44,10 +44,10 @@ int main() {
     bzero((char*)&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(PORT_NO); // Use htons for correct byte order
+    serv_addr.sin_port = htons(PORT_NO);
 
     // Bind the socket
-    if (bind(server_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+    if (bind(server_socket, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
         perror("Error binding");
         close(server_socket);
         exit(EXIT_FAILURE);
@@ -113,8 +113,6 @@ int handle(int client_socket) {
         perror("error getting request");
         return 1;
     }
-
-    printf("Request : %s\n", req.arguments[0]);
 
     switch (req.action) {
         case LOGIN:

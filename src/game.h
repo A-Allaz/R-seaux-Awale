@@ -113,14 +113,14 @@ int play_turn(Game* game, int slot) {
 
     // Victory if opponent has no pebbles in its camp
     int hasPebbles = 0; // Only for enemy player
-    for(int i = 0; i < 6; i++) {
+    for (int i = 0; i < 6; i++) {
         if (game->board[((game->current_state + 1) % 2) * 6 + i] != 0) { // Checks the enemy's side
             hasPebbles = 1;
             break;
         }
     }
 
-    if(!hasPebbles) {
+    if (!hasPebbles) {
         return 1;
     }
 
@@ -174,8 +174,7 @@ int print_board_state(Game* game) {
     printf("\033[0;39m");
 }
 
-int print_player_stats(Game *game, int player)
-{
+int print_player_stats(Game *game, int player) {
     if (player != 0 && player != 1) return 1;
 
     printf("===== Stats for Player %d: =====\n", player+1);
@@ -647,7 +646,7 @@ int load_game(const char* user0, const char* user1) {
     }
 
     // If the game was not found, add it to the list
-    fprintf(stderr, "Error: Game not foound.\n");
+    fprintf(stderr, "Error: Game not found.\n");
     return -1;
 }
 

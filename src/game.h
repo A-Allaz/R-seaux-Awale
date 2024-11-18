@@ -121,7 +121,7 @@ int print_board_state(Game* game) {
     for(int i = 0; i < 6; i++) {
         printf("|\t%d\t", game->board[i]);
         if(i == 5) {
-            printf("| -- player 1's side --\n");
+            printf("| -- %s's side --\n", game->player0);
         }
     }
 
@@ -134,7 +134,7 @@ int print_board_state(Game* game) {
     for(int i = 11; i > 5; i--) {
         printf("|\t%d\t",game->board[i]);
         if(i == 6) {
-            printf("| -- player 2's side --\n");
+            printf("| -- %s's side --\n", game->player1);
         }
     }
 

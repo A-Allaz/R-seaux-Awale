@@ -425,16 +425,6 @@ char* read_json_to_string(const char* filename) {
     return content;
 }
 
-// Dynamically allocates memory to list of players
-char** get_online_players(int* count) {
-    // Initialize count to zero
-    *count = 0;
-
-
-
-    return game;
-}
-
 int save_game_state(const char *filename, Game *game) {
     FILE *file = fopen("game.json", "r+");
 

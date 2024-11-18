@@ -131,11 +131,45 @@ int handle(int newsockfd) {
 }
 
 int login(int newsockfd, const char args[3][255]) {
-    char username[255];
-    strcpy(args[0], username);
+    GameData gameData;
+    if (parse_json(&gameData, "game.json")) {
+        fprintf(stderr, "Error: Failed to parse JSON\n");
+        send(newsockfd, "false", 5, 0);
+        return -1;
+    }
 
-    printf("%s", username);
+    // Check if the username exists in the player list
+    bool userExists = false;
+    for (int i = 0; i < gameData.player_count; i++) {
+        if (strcmp(gameData.players[i].name, args[1]) == 0) {
+            // Username exists, set the player as online
+            gameData.players[i].online = true;
+            userExists = true;
+            break;
+        }
+    }
 
+    // If the user does not exist, add them to the list
+    if (!userExists) {
+        if (gameData.player_count < MAX_PLAYERS) {
+            strcpy(gameData.players[gameData.player_count].name, args[1]);
+            gameData.players[gameData.player_count].online = true;
+            gameData.player_count++; // Increment player count
+        } else {
+            fprintf(stderr, "Error: Player list is full\n");
+            send(newsockfd, "false", 5, 0);
+            return -1;
+        }
+    }
+
+    // Save the updated GameData back to the JSON file
+    if (save_to_json("game.json", &gameData)) {
+        fprintf(stderr, "Error: Failed to save updated game data to JSON\n");
+        send(newsockfd, "false", 5, 0);
+        return -1;
+    }
+
+    send(newsockfd, "true", 4, 0);
     return 0;
 }
 

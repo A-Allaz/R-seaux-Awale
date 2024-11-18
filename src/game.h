@@ -344,7 +344,7 @@ int parse_json(GameData* gameData, const char *filename) {
     return 0;
 }
 
-void save_to_json(const char *filename, const GameData *data) {
+int save_to_json(const char *filename, const GameData *data) {
     cJSON *json = cJSON_CreateObject();
 
     // Add players array
@@ -387,11 +387,13 @@ void save_to_json(const char *filename, const GameData *data) {
         fclose(file);
     } else {
         perror("Error writing to file");
+        return -1;
     }
 
     // Cleanup
     cJSON_Delete(json);
     free(json_str);
+    return 0;
 }
 
 // Function to read the content of a file into a string

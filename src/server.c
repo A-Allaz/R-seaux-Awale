@@ -18,6 +18,8 @@ int list(int newsockfd);
 
 int make_move(Game *game, int slot);
 
+int login(int newsockfd, const char args[3][255]);
+
 int main() {
     const in_port_t PORT_NO = 3000;
     int server_socket, client_socket;
@@ -110,58 +112,68 @@ int handle(int newsockfd) {
 
     switch (req.action) {
         case LOGIN:
-            break;
+            if (login(newsockfd, req.arguments)) {
+                return 1;
+            }
         case CHALLENGE:
             break;
         case ACCEPT:
             break;
         case LIST:
-            list(newsockfd);
+            if (list(newsockfd)) {
+                return 1;
+            }
         case MOVE:
             break;
     }
+
+    return 0;
 }
 
-// Return
+int login(int newsockfd, const char args[3][255]) {
+    char username[255];
+    strcpy(args[0], username);
+
+    printf("%s", username);
+
+    return 0;
+}
+
 int list(int newsockfd) {
-    int count;
-    char** players = get_online_players(&count);
-
-    if (players == NULL) {
-        fprintf(stderr, "Error: Could not retrieve online players.\n");
-        return 1;
+    GameData gameData;
+    if (parse_json(&gameData, "game.json")) {
+        fprintf(stderr, "Error: Failed to parse JSON\n");
+        return -1;
     }
 
-    // Send the count of players first
-    if (send(newsockfd, &count, sizeof(count), 0) == -1) {
-        perror("Error sending player count");
-        for (int i = 0; i < count; i++) {
-            free(players[i]);
-        }
-        free(players);
-        return 1;
-    }
+    // Create a JSON array to hold online players
+    cJSON *onlinePlayers = cJSON_CreateArray();
 
-    // Send each player name
-    for (int i = 0; i < count; i++) {
-        if (send(newsockfd, players[i], 255, 0) == -1) {
-            perror("Error sending player name");
-
-            // Free allocated memory before returning
-            for (int j = 0; j < count; j++) {
-                free(players[j]);
-            }
-            free(players);
-            return 1;
+    for (int i = 0; i < gameData.player_count; i++) {
+        if (gameData.players[i].online) {
+            // Add the online player's name to the JSON array
+            cJSON_AddItemToArray(onlinePlayers, cJSON_CreateString(gameData.players[i].name));
         }
     }
 
-    // Free allocated memory
-    for (int i = 0; i < count; i++) {
-        free(players[i]);
-    }
-    free(players);
+    // Serialize the JSON array to a string
+    char *jsonString = cJSON_PrintUnformatted(onlinePlayers);
+    cJSON_Delete(onlinePlayers); // Free JSON object memory
 
+    if (!jsonString) {
+        fprintf(stderr, "Error: Failed to serialize JSON\n");
+        return -1;
+    }
+
+    // Send the JSON string to the client
+    size_t jsonStringLength = strlen(jsonString);
+    if (send(newsockfd, jsonString, jsonStringLength, 0) == -1) {
+        perror("Error sending online players list");
+        free(jsonString);
+        return -1;
+    }
+
+    free(jsonString); // Free the serialized JSON string
     return 0;
 }
 

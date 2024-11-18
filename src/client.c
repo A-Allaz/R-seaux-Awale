@@ -25,7 +25,7 @@ int main(){
     while(game->score.player0 < 25 && game->score.player1 < 25) {
         clrscr();
 
-        if(game->current_state == WIN_PLAYER_0 || game->current_state == WIN_PLAYER_1){
+        if (game->current_state == WIN_PLAYER_0 || game->current_state == WIN_PLAYER_1) {
             printf("GAME OVER\n");
             if(game->current_state == WIN_PLAYER_0){
                 printf("%s WINS\n", game->player0);
@@ -39,7 +39,7 @@ int main(){
         print_player_stats(game, 1);
         print_board_state(game);
 
-        if(game->current_state == 0){
+        if (game->current_state == MOVE_PLAYER_0) {
             printf("%s'S TURN\t", game->player0);
             printf("\033[0;93m"); // Yellow
             printf("Surrender (0)\n");

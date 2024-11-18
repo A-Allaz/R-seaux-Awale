@@ -4,7 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "cJSON.h"
+
+#define MAX_PLAYERS 100
+#define MAX_GAMES 100
+#define MAX_NAME_LENGTH 255
+#define BOARD_SIZE 12
 
 
 typedef enum {
@@ -14,19 +20,34 @@ typedef enum {
     WIN_PLAYER_1,
 } GAME_STATE;
 
+// Represent the score of a game
 typedef struct {
     int player0;
     int player1;
 } Score;
 
-// The main game structure
+// Represent a single game
 typedef struct {
-    char player0[255];
-    char player1[255];
+    char player0[MAX_NAME_LENGTH];
+    char player1[MAX_NAME_LENGTH];
     GAME_STATE current_state;
     Score score;
-    int board[12];
+    int board[BOARD_SIZE];
 } Game;
+
+// Represent a single player
+typedef struct {
+    char name[MAX_NAME_LENGTH];
+    bool online;
+} Player;
+
+// Represent the entire game data
+typedef struct {
+    Player players[MAX_PLAYERS];
+    int player_count;
+    Game games[MAX_GAMES];
+    int game_count;
+} GameData;
 
 int init_score(Game* game) {
     game->score.player0 = 0;
@@ -224,6 +245,155 @@ int createGameFile() {
     return 0;
 }
 
+// Parse the JSON file into a GameData struct
+int parse_json(GameData* gameData, const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening file");
+        return 1;
+    }
+
+    // Read the file into a buffer
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    char *json_str = (char *) malloc(length + 1);
+    fread(json_str, 1, length, file);
+    json_str[length] = '\0';
+    fclose(file);
+
+    // Parse the JSON string
+    cJSON *json = cJSON_Parse(json_str);
+    free(json_str);
+
+    if (!json) {
+        printf("Error parsing JSON: %s\n", cJSON_GetErrorPtr());
+        return 1;
+    }
+
+    // Parse players
+    cJSON *players = cJSON_GetObjectItem(json, "players");
+    if (players && cJSON_IsArray(players)) {
+        gameData->player_count = cJSON_GetArraySize(players);
+        for (int i = 0; i < gameData->player_count; i++) {
+            cJSON *player = cJSON_GetArrayItem(players, i);
+            if (player && cJSON_IsObject(player)) {
+                cJSON *name = cJSON_GetObjectItem(player, "name");
+                cJSON *online = cJSON_GetObjectItem(player, "online");
+
+                if (name && cJSON_IsString(name) && online && cJSON_IsBool(online)) {
+                    strncpy(gameData->players[i].name, name->valuestring, MAX_NAME_LENGTH);
+                    gameData->players[i].online = online->valueint;
+                }
+            }
+        }
+    }
+
+    // Parse games
+    cJSON *games = cJSON_GetObjectItem(json, "games");
+    if (games && cJSON_IsArray(games)) {
+        gameData->game_count = cJSON_GetArraySize(games);
+        for (int i = 0; i < gameData->game_count; i++) {
+            cJSON *game = cJSON_GetArrayItem(games, i);
+
+            if (game && cJSON_IsObject(game)) {
+                cJSON *player0 = cJSON_GetObjectItem(game, "player0");
+                cJSON *player1 = cJSON_GetObjectItem(game, "player1");
+                cJSON *current_state = cJSON_GetObjectItem(game, "currentState");
+
+                cJSON *score = cJSON_GetObjectItem(game, "score");
+                cJSON *board = cJSON_GetObjectItem(game, "board");
+
+                if (player0 && cJSON_IsString(player0)) {
+                    strncpy(gameData->games[i].player0, player0->valuestring, MAX_NAME_LENGTH);
+                }
+                if (player1 && cJSON_IsString(player1)) {
+                    strncpy(gameData->games[i].player1, player1->valuestring, MAX_NAME_LENGTH);
+                }
+                if (current_state && cJSON_IsNumber(current_state)) {
+                    gameData->games[i].current_state = current_state->valueint;
+                }
+
+                if (score && cJSON_IsObject(score)) {
+                    cJSON *score0 = cJSON_GetObjectItem(score, "player0");
+                    cJSON *score1 = cJSON_GetObjectItem(score, "player1");
+
+                    if (score0 && cJSON_IsNumber(score0)) {
+                        gameData->games[i].score.player0 = score0->valueint;
+                    }
+                    if (score1 && cJSON_IsNumber(score1)) {
+                        gameData->games[i].score.player1 = score1->valueint;
+                    }
+                }
+
+                if (board && cJSON_IsArray(board)) {
+                    int board_size = cJSON_GetArraySize(board);
+                    for (int j = 0; j < board_size && j < BOARD_SIZE; j++) {
+                        cJSON *cell = cJSON_GetArrayItem(board, j);
+                        if (cell && cJSON_IsNumber(cell)) {
+                            gameData->games[i].board[j] = cell->valueint;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cJSON_Delete(json);
+    return 0;
+}
+
+void save_to_json(const char *filename, const GameData *data) {
+    cJSON *json = cJSON_CreateObject();
+
+    // Add players array
+    cJSON *players = cJSON_CreateArray();
+    for (int i = 0; i < data->player_count; i++) {
+        cJSON *player = cJSON_CreateObject();
+        cJSON_AddStringToObject(player, "name", data->players[i].name);
+        cJSON_AddBoolToObject(player, "online", data->players[i].online);
+        cJSON_AddItemToArray(players, player);
+    }
+    cJSON_AddItemToObject(json, "players", players);
+
+    // Add games array
+    cJSON *games = cJSON_CreateArray();
+    for (int i = 0; i < data->game_count; i++) {
+        cJSON *game = cJSON_CreateObject();
+        cJSON_AddStringToObject(game, "player0", data->games[i].player0);
+        cJSON_AddStringToObject(game, "player1", data->games[i].player1);
+        cJSON_AddNumberToObject(game, "currentState", data->games[i].current_state);
+
+        cJSON *score = cJSON_CreateObject();
+        cJSON_AddNumberToObject(score, "player0", data->games[i].score.player0);
+        cJSON_AddNumberToObject(score, "player1", data->games[i].score.player1);
+        cJSON_AddItemToObject(game, "score", score);
+
+        cJSON *board = cJSON_CreateIntArray(data->games[i].board, BOARD_SIZE);
+        cJSON_AddItemToObject(game, "board", board);
+
+        cJSON_AddItemToArray(games, game);
+    }
+    cJSON_AddItemToObject(json, "games", games);
+
+    // Serialize JSON to string
+    char *json_str = cJSON_Print(json);
+
+    // Write JSON string to file
+    FILE *file = fopen(filename, "w");
+    if (file) {
+        fputs(json_str, file);
+        fclose(file);
+    } else {
+        perror("Error writing to file");
+    }
+
+    // Cleanup
+    cJSON_Delete(json);
+    free(json_str);
+}
+
 // Function to read the content of a file into a string
 char* read_json_to_string(const char* filename) {
     FILE *file = fopen(filename, "r");
@@ -258,68 +428,9 @@ char** get_online_players(int* count) {
     // Initialize count to zero
     *count = 0;
 
-    // Read the file content
-    char* file_content = read_json_to_string("game.json");
-    if (!file_content) {
-        return NULL;
-    }
 
-    // Parse the JSON content
-    cJSON* json = cJSON_Parse(file_content);
-    free(file_content); // Free the file content buffer
 
-    if (!json) {
-        fprintf(stderr, "Error: Failed to parse JSON\n");
-        return NULL;
-    }
-
-    // Extract the "active_players" array
-    cJSON* active_players = cJSON_GetObjectItemCaseSensitive(json, "active_players");
-    if (!cJSON_IsArray(active_players)) {
-        fprintf(stderr, "Error: 'active_players' is not an array or does not exist\n");
-        cJSON_Delete(json);
-        return NULL;
-    }
-
-    // Get the number of active players
-    *count = cJSON_GetArraySize(active_players);
-
-    // Allocate memory for the list of player names
-    char** player_list = (char**) malloc(*count * sizeof(char*));
-    if (!player_list) {
-        fprintf(stderr, "Error: Memory allocation failed\n");
-        cJSON_Delete(json);
-        return NULL;
-    }
-
-    // Iterate through the array and copy player names
-    for (int i = 0; i < *count; i++) {
-        cJSON* player = cJSON_GetArrayItem(active_players, i);
-        if (cJSON_IsString(player) && player->valuestring) {
-            player_list[i] = (char*) malloc(255 * sizeof(char));
-            if (!player_list[i]) {
-                fprintf(stderr, "Error: Memory allocation failed for player name\n");
-
-                // Free already allocated memory
-                for (int j = 0; j < i; j++) {
-                    free(player_list[j]);
-                }
-                free(player_list);
-                cJSON_Delete(json);
-                return NULL;
-            }
-            strncpy(player_list[i], player->valuestring, 254);
-            player_list[i][254] = '\0'; // Ensure null-termination
-        } else {
-            fprintf(stderr, "Warning: Invalid player name found\n");
-            player_list[i] = NULL;
-        }
-    }
-
-    // Clean up the original JSON object
-    cJSON_Delete(json);
-
-    return player_list;
+    return game;
 }
 
 int save_game_state(const char *filename, Game *game) {

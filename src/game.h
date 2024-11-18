@@ -77,10 +77,26 @@ int compute_score(Game* game, int slot, int pebbles){
 }
 
 int play_turn(Game* game, int slot){
+    // Checking victory conditions : if returns 1, the current player has won
+
     int pebbles = move_pebbles(game, slot);
+
+    // Victory if opponent has no pebbles in its camp
+    int hasPebbles = 0; // Only for enemy player
+    for(int i = 0; i < 6; i++) {
+        if (game->board[((game->currentTurn + 1) % 2) * 6 + i] != 0) { // Checks the enemy's side
+            hasPebbles = 1;
+            break;
+        }
+    }
+
+    if(!hasPebbles) {
+        return 1;
+    }
+
     compute_score(game, slot, pebbles);
 
-    // check victory : if returns 1, the current player won the game through points
+    // Victory if more than half the available points
     if((game->currentTurn == 0 && game->score.player0 > 24) || (game->currentTurn == 1 && game->score.player0 > 24)){
         return 1;
     }

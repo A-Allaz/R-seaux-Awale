@@ -31,31 +31,31 @@ int main() {
 
     struct sockaddr_in cli_addr,serv_addr;
 
-    printf ("Server starting...\n");
+    printf("Server starting...\n");
 
     // Open socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
-        printf ("Could not open socket\n");
-        exit(0);
+        perror("Could not open socket");
+        exit(EXIT_FAILURE);
     }
 
     // Initialise parameters
-    bzero((char*) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family       = AF_INET;
-    serv_addr.sin_addr.s_addr  = htonl(INADDR_ANY);
-    serv_addr.sin_port         = PORT_NO;
+    bzero((char*)&serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serv_addr.sin_port = htons(PORT_NO); // Use htons for correct byte order
 
     // Bind the socket
-    if (bind(server_socket, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-        printf("Error binding\n");
+    if (bind(server_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Error binding");
         close(server_socket);
-        exit(errno);
+        exit(EXIT_FAILURE);
     }
 
     // Begin listening
     if (listen(server_socket, 5) < 0) {
-        printf("Error on listen\n");
+        perror("Error on listen");
         close(server_socket);
         exit(EXIT_FAILURE);
     }

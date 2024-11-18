@@ -131,15 +131,15 @@ int print_board_state(Game* game) {
         printf("\033[0;92m");
     }
 
-    for(int i = 6; i < 12; i++) {
+    for(int i = 11; i > 5; i--) {
         printf("|\t%d\t",game->board[i]);
-        if(i == 11) {
+        if(i == 6) {
             printf("| -- player 2's side --\n");
         }
     }
 
     printf("\033[0;37m");
-    printf("\t(7)\t\t(8)\t\t(9)\t\t(10)\t\t(11)\t\t(12)\n\n");
+    printf("\t(12)\t\t(11)\t\t(10)\t\t(9)\t\t(8)\t\t(7)\n\n");
     printf("\033[0;39m");
 }
 

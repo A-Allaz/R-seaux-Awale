@@ -1,9 +1,45 @@
+#ifndef AWALEGAME_REQUEST_H
+
+#define AWALEGAME_REQUEST_H
+
 #include <sys/socket.h>
 
-#ifndef AWALEGAME_REQUEST_H
-#define AWALEGAME_REQUEST_H
-#define BUFFER_SIZE 1024  // Adjust based on your needs
+#define BUFFER_SIZE 1024
 
+// Initialise server given port no, and socket address. If error, halts program
+int initialize_server(in_port_t port, struct sockaddr_in *serv_addr) {
+    int server_socket;
+
+    // Open socket
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket < 0) {
+        perror("Could not open socket");
+        exit(EXIT_FAILURE);
+    }
+
+    // Initialize server address structure
+    bzero((char *) serv_addr, sizeof(*serv_addr));
+    serv_addr->sin_family = AF_INET;
+    serv_addr->sin_addr.s_addr = INADDR_ANY;
+    serv_addr->sin_port = htons(port);
+
+    // Bind the socket to the address
+    if (bind(server_socket, (struct sockaddr *) serv_addr, sizeof(*serv_addr)) < 0) {
+        perror("Binding failed");
+        close(server_socket);
+        exit(EXIT_FAILURE);
+    }
+
+    // Start listening for connections
+    if (listen(server_socket, 5) < 0) {
+        perror("Listen failed");
+        close(server_socket);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Server initialized and listening on port %d\n", port);
+    return server_socket;
+}
 
 typedef enum {
     LOGIN,
@@ -43,6 +79,20 @@ int string_to_action(const char* action_str, ACTION* action) {
     else
         return -1;
     return 0;
+}
+
+void print_request(const Request* request) {
+    if (!request) {
+        printf("Request is NULL\n");
+        return;
+    }
+
+    printf("Request:\n");
+    printf("  Action: %s\n", action_to_string(request->action));
+    printf("  Arguments:\n");
+    for (int i = 0; i < 3; i++) {
+        printf("    [%d]: %s\n", i, request->arguments[i]);
+    }
 }
 
 // Function to convert Request to JSON - returned value must be freed
@@ -193,46 +243,4 @@ int send_request(int socket_to, const Request* req) {
     return 0;
 }
 
-//// Function to parse the incoming message and populate the Request structure
-//int parse_request(char *buffer, Request *req) {
-//    // Tokenize the buffer using "?" as the delimiter
-//    char *token = strtok(buffer, "?");
-//
-//    if (token == NULL) {
-//        printf("Invalid format");
-//        return -1;  // Invalid request format
-//    }
-//
-//    // Parse the action
-//    if (strcmp(token, "LOGIN") == 0) {
-//        req->action = LOGIN;
-//    } else if (strcmp(token, "CHALLENGE") == 0) {
-//        req->action = CHALLENGE;
-//    } else if (strcmp(token, "ACCEPT") == 0) {
-//        req->action = ACCEPT;
-//    } else if (strcmp(token, "LIST") == 0) {
-//        req->action = LIST;
-//    } else if (strcmp(token, "MOVE") == 0) {
-//        req->action = MOVE;
-//    } else {
-//        printf("Unknown action given");
-//        return -1;  // Unknown action
-//    }
-//
-//    // Initialize arguments array and count
-//    int n = 0;
-//
-//    // Parse the arguments
-//    while ((token = strtok(NULL, "?")) != NULL) {
-//        if (n > 3) {
-//            printf("Too many arguments given");
-//            return -1;
-//        }
-//        strncpy(req->arguments[n], token, 255);
-//        n++;
-//    }
-//
-//    return 0;
-//}
-
-#endif //AWALEGAME_REQUEST_H
+#endif

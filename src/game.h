@@ -1,10 +1,12 @@
 #ifndef R_SEAUX_AWALE_GAME_H
+
 #define R_SEAUX_AWALE_GAME_H
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+
 #include "cJSON.h"
 
 #define MAX_PLAYERS 100

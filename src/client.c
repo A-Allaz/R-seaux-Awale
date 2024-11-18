@@ -1,10 +1,3 @@
-//
-// Created by Christopher Wilson on 08/11/2024.
-//
-
-#include "utils.h"
-#include "game.h"
-#include "network.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -13,8 +6,12 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define PORT_NO 3001
+#include "utils.h"
+#include "game.h"
+#include "network.h"
+
 #define SERVER_IP "127.0.0.1"
+#define PORT_NO 3000
 
 int main() {
     char player_name[255];
@@ -67,15 +64,6 @@ int main() {
         printf("Request sent successfully\n");
     }
 
-//    send(client_socket, "LIST", 4, 0);
-
-    // Send the request
-    // if (send_request(client_socket, &req) == 0) {
-    //     printf("Request sent successfully.\n");
-    // } else {
-    //     printf("Failed to send request.\n");
-    // }
-
     Game *game = malloc(sizeof(Game));
     if (game == NULL) {
         fprintf(stderr, "Memory allocation failed\n");
@@ -90,13 +78,12 @@ int main() {
 
     init_game(game, player_name, "Enemy");
     
-    int slot;
     while (game->score.player0 < 25 && game->score.player1 < 25) {
         clrscr();
 
         if (game->current_state == WIN_PLAYER_0 || game->current_state == WIN_PLAYER_1) {
             printf("GAME OVER\n");
-            if(game->current_state == WIN_PLAYER_0){
+            if (game->current_state == WIN_PLAYER_0) {
                 printf("%s WINS\n", game->player0);
             } else {
                 printf("%s WINS\n", game->player1);
@@ -119,7 +106,14 @@ int main() {
             printf("\033[0;39m"); // White
 
             while (1) {
-                if (scanf("%d", &slot) != 1 || slot < 0 || slot > 12) {
+                char input[4];  // input doesn't need to be bigger than 3 chars
+                if (scanf("%3s", input) == -1) {
+                    perror("Error on input\n");
+                    continue;  // Skip the rest of the loop
+                }
+
+                int slot = convert_and_validate(input);
+                if (slot < 0) {
                     // Clear the invalid input from stdin buffer
                     while (getchar() != '\n');
                     printf("Invalid input! Please enter a number between 0 and 12.\n");
@@ -141,14 +135,14 @@ int main() {
                         }
                     }
                     if (surrender == 1) {
-                        game->current_state == WIN_PLAYER_1;
+                        game->current_state = WIN_PLAYER_1;
                         break;
-                    } else if(surrender == 0){
+                    } else if (surrender == 0) {
                         break;
                     }
                 }
 
-                if(slot >= 1){
+                if (slot >= 1) {
                     play_turn(game, slot - 1);
                     break;
                 }
@@ -160,8 +154,6 @@ int main() {
             return 0;
         }
     }
-
-    return 0;
 
     return 0;
 }

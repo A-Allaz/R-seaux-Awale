@@ -1,35 +1,31 @@
-//
-// Created by Christopher Wilson on 08/11/2024.
-//
-
-
-#include "game.h"
-#include "network.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <errno.h>
 
+#include "game.h"
+#include "network.h"
 #include "utils.h"
 
-int handle(int client_socket);
+#define PORT_NO 3000
 
-int list(int socket);
+int handle(int client_socket, int pid);
 
-int login(int socket, const char args[3][255]);
+int list(int socket, int pid);
 
-int challenge(int socket, char args[3][255]);
+int login(int socket, const char args[3][255], int pid);
 
-int move(int socket, char args[3][255]);
+int challenge(int socket, char args[3][255], int pid);
 
-int accept_request(int socket, char args[3][255]);
+int move(int socket, char args[3][255], int pid);
+
+int accept_request(int socket, char args[3][255], int pid);
 
 int main() {
-    const in_port_t PORT_NO = 3001;
     int server_socket, client_socket;
-    socklen_t clilen;
+    socklen_t addr_len;
 
-    struct sockaddr_in cli_addr,serv_addr;
+    struct sockaddr_in cli_addr, serv_addr;
 
     printf("Server starting...\n");
 
@@ -60,27 +56,26 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listening on port %d\n", PORT_NO);
+    printf("Server listening on port %d\n\n", PORT_NO);
 
     // Wait for client to connect
     while (1) {
-        clilen = sizeof (cli_addr);
+        addr_len = sizeof (cli_addr);
 
         // Client connects, attempt to accept
-        client_socket = accept(server_socket, (struct sockaddr*) &cli_addr, &clilen);
+        client_socket = accept(server_socket, (struct sockaddr*) &cli_addr, &addr_len);
 
         if (client_socket < 0) {
             printf("Error accepting\n");
             exit(errno);
         }
 
-        printf("Connection accepted\n");
-
         // Fork into thread to handle asynchronously
         int pid = fork();
 
         // Error case
         if (pid < 0) {
+            perror("Connection accepted, forking unsuccessful\n");
             perror("Error on fork");
             close(client_socket);
             continue;
@@ -88,8 +83,9 @@ int main() {
 
         // Child thread
         else if (pid == 0) {
+            printf("Connection accepted, fork %d\n", pid);
             close(server_socket);
-            handle(client_socket);
+            handle(client_socket, pid);
             close(client_socket);
             exit(0); /* Terminate child process */
         }
@@ -107,44 +103,52 @@ int main() {
     return 0;
 }
 
-int handle(int client_socket) {
+int handle(int client_socket, const int pid) {
     Request req;
     if (receive_request(client_socket, &req)) {
-        perror("error getting request");
+        fprintf(stderr, "%d Error: could not get request", pid);
         return 1;
     }
 
+    print_request(&req);
+
     switch (req.action) {
-        case LOGIN:
-            if (login(client_socket, req.arguments)) {
+        case LOGIN: {
+            if (login(client_socket, req.arguments, pid)) {
                 return 1;
-            }
-        case CHALLENGE:
-            if (challenge(client_socket, req.arguments)) {
+            } break;
+        }
+
+        case CHALLENGE: {
+            if (challenge(client_socket, req.arguments, pid)) {
                 return 1;
-            }
+            } break;
+        }
+
         case ACCEPT:
-            if (accept_request(client_socket, req.arguments)) {
+            if (accept_request(client_socket, req.arguments, pid)) {
                 return 1;
-            }
+            } break;
         case LIST:
-            if (list(client_socket)) {
+            if (list(client_socket, pid)) {
                 return 1;
-            }
+            } break;
         case MOVE:
-            if (move(client_socket, req.arguments)) {
+            if (move(client_socket, req.arguments, pid)) {
                 return 1;
-            };
+            } break;
     }
 
     return 0;
 }
 
 // Create new username if it doesn't already exist and mark as active. Return true for success, false for error
-int login(int socket, const char args[3][255]) {
+int login(int socket, const char args[3][255], const int pid) {
+    printf("%d LOGIN for socket: %d", pid, socket);
+
     GameData gameData;
     if (parse_json(&gameData, "game.json")) {
-        fprintf(stderr, "Error: Failed to parse JSON\n");
+        fprintf(stderr, "%d Error: Failed to parse JSON\n", pid);
         send(socket, "false", 5, 0);
         return -1;
     }
@@ -167,7 +171,7 @@ int login(int socket, const char args[3][255]) {
             gameData.players[gameData.player_count].online = true;
             gameData.player_count++; // Increment player count
         } else {
-            fprintf(stderr, "Error: Player list is full\n");
+            fprintf(stderr, "%d Error: Player list is full\n", pid);
             send(socket, "false", 5, 0);
             return -1;
         }
@@ -175,7 +179,7 @@ int login(int socket, const char args[3][255]) {
 
     // Save the updated GameData back to the JSON file
     if (save_to_json("game.json", &gameData)) {
-        fprintf(stderr, "Error: Failed to save updated game data to JSON\n");
+        fprintf(stderr, "%d Error: Failed to save updated game data to JSON\n", pid);
         send(socket, "false", 5, 0);
         return -1;
     }
@@ -185,20 +189,24 @@ int login(int socket, const char args[3][255]) {
 }
 
 // TODO
-int challenge(int socket, char args[3][255]) {
+int challenge(int socket, char args[3][255], const int pid) {
+    printf("%d CHALLENGE for socket: %d", pid, socket);
     return 0;
 }
 
 // TODO
-int accept_request(int socket, char args[3][255]) {
+int accept_request(int socket, char args[3][255], const int pid) {
+    printf("%d ACCEPT for socket: %d", pid, socket);
     return 0;
 }
 
 // Return all currently online users as json
-int list(int socket) {
+int list(int socket, const int pid) {
+    printf("%d LIST for socket: %d", pid, socket);
+
     GameData gameData;
     if (parse_json(&gameData, "game.json")) {
-        fprintf(stderr, "Error: Failed to parse JSON\n");
+        fprintf(stderr, "%d Error: Failed to parse JSON\n", pid);
         return -1;
     }
 
@@ -217,14 +225,14 @@ int list(int socket) {
     cJSON_Delete(onlinePlayers); // Free JSON object memory
 
     if (!jsonString) {
-        fprintf(stderr, "Error: Failed to serialize JSON\n");
+        fprintf(stderr, "%d Error: Failed to serialize JSON\n", pid);
         return -1;
     }
 
     // Send the JSON string to the client
     size_t jsonStringLength = strlen(jsonString);
     if (send(socket, jsonString, jsonStringLength, 0) == -1) {
-        perror("Error sending online players list");
+        fprintf(stderr, "%d Error: Failed to send online players list\n", pid);
         free(jsonString);
         return -1;
     }
@@ -234,11 +242,13 @@ int list(int socket) {
 }
 
 // Move your pieces given args: [user1, user2, move]. Return new game state as json
-int move(int socket, char args[3][255]) {
+int move(int socket, char args[3][255], const int pid) {
+    printf("%d MOVE for socket: %d", pid, socket);
+
     // Get game data
     GameData gameData;
     if (parse_json(&gameData, "game.json")) {
-        fprintf(stderr, "Error: Failed to parse JSON\n");
+        fprintf(stderr, "%d Error: Failed to parse JSON\n", pid);
         send(socket, "false", 5, 0);
         return -1;
     }
@@ -262,7 +272,7 @@ int move(int socket, char args[3][255]) {
 
     // Save the updated game data back to the JSON file
     if (save_to_json(JSON_FILENAME, &gameData) != 0) {
-        fprintf(stderr, "Error: Failed to save updated game data to JSON\n");
+        fprintf(stderr, "%d Error: Failed to save updated game data to JSON\n", pid);
         return -1;
     }
 
@@ -271,7 +281,7 @@ int move(int socket, char args[3][255]) {
 
     // Send the JSON string to the client
     if (send(socket, json_string, strlen(json_string), 0) == -1) {
-        perror("Error sending game state");
+        fprintf(stderr, "%d Error: Failed to send game state\n", pid);
         free(json_string);  // Free the string created by cJSON_Print
         return -1;
     }

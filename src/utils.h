@@ -8,8 +8,7 @@
 #include <unistd.h>
 #include "game.h"
 
-void clrscr()
-{
+void clrscr() {
     system("@cls||clear");
 }
 

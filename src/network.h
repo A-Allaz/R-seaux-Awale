@@ -79,9 +79,3 @@ int receive_request(int sockfd, Request *req) {
     // Parse the request from the buffer
     return parse_request(buffer, req);
 }
-
-
-int broadcast_game_state() {
-
-    return 0;
-}

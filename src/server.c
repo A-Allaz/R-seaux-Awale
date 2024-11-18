@@ -12,13 +12,17 @@
 
 #include "utils.h"
 
-int handle(int newsockfd);
+int handle(int client_socket);
 
-int list(int newsockfd);
+int list(int socket);
 
-int make_move(Game *game, int slot);
+int login(int socket, const char args[3][255]);
 
-int login(int newsockfd, const char args[3][255]);
+int challenge(int socket, char args[3][255]);
+
+int move(int socket, char args[3][255]);
+
+int accept_request(int socket, char args[3][255]);
 
 int main() {
     const in_port_t PORT_NO = 3000;
@@ -103,38 +107,45 @@ int main() {
     return 0;
 }
 
-int handle(int newsockfd) {
+int handle(int client_socket) {
     Request req;
-    if (receive_request(newsockfd, &req)) {
+    if (receive_request(client_socket, &req)) {
         perror("error getting request");
         return 1;
     }
 
     switch (req.action) {
         case LOGIN:
-            if (login(newsockfd, req.arguments)) {
+            if (login(client_socket, req.arguments)) {
                 return 1;
             }
         case CHALLENGE:
-            break;
+            if (challenge(client_socket, req.arguments)) {
+                return 1;
+            }
         case ACCEPT:
-            break;
+            if (accept_request(client_socket, req.arguments)) {
+                return 1;
+            }
         case LIST:
-            if (list(newsockfd)) {
+            if (list(client_socket)) {
                 return 1;
             }
         case MOVE:
-            break;
+            if (move(client_socket, req.arguments)) {
+                return 1;
+            };
     }
 
     return 0;
 }
 
-int login(int newsockfd, const char args[3][255]) {
+// Create new username if it doesn't already exist and mark as active. Return true for success, false for error
+int login(int socket, const char args[3][255]) {
     GameData gameData;
     if (parse_json(&gameData, "game.json")) {
         fprintf(stderr, "Error: Failed to parse JSON\n");
-        send(newsockfd, "false", 5, 0);
+        send(socket, "false", 5, 0);
         return -1;
     }
 
@@ -157,7 +168,7 @@ int login(int newsockfd, const char args[3][255]) {
             gameData.player_count++; // Increment player count
         } else {
             fprintf(stderr, "Error: Player list is full\n");
-            send(newsockfd, "false", 5, 0);
+            send(socket, "false", 5, 0);
             return -1;
         }
     }
@@ -165,15 +176,26 @@ int login(int newsockfd, const char args[3][255]) {
     // Save the updated GameData back to the JSON file
     if (save_to_json("game.json", &gameData)) {
         fprintf(stderr, "Error: Failed to save updated game data to JSON\n");
-        send(newsockfd, "false", 5, 0);
+        send(socket, "false", 5, 0);
         return -1;
     }
 
-    send(newsockfd, "true", 4, 0);
+    send(socket, "true", 4, 0);
     return 0;
 }
 
-int list(int newsockfd) {
+// TODO
+int challenge(int socket, char args[3][255]) {
+    return 0;
+}
+
+// TODO
+int accept_request(int socket, char args[3][255]) {
+    return 0;
+}
+
+// Return all currently online users as json
+int list(int socket) {
     GameData gameData;
     if (parse_json(&gameData, "game.json")) {
         fprintf(stderr, "Error: Failed to parse JSON\n");
@@ -201,7 +223,7 @@ int list(int newsockfd) {
 
     // Send the JSON string to the client
     size_t jsonStringLength = strlen(jsonString);
-    if (send(newsockfd, jsonString, jsonStringLength, 0) == -1) {
+    if (send(socket, jsonString, jsonStringLength, 0) == -1) {
         perror("Error sending online players list");
         free(jsonString);
         return -1;
@@ -211,14 +233,50 @@ int list(int newsockfd) {
     return 0;
 }
 
-// Perform move given a slot (ASSUMED TO BE VALID)
-int make_move(Game *game, int slot) {
-    // Perform turn
-    play_turn(game, slot - 1);
+// Move your pieces given args: [user1, user2, move]. Return new game state as json
+int move(int socket, char args[3][255]) {
+    // Get game data
+    GameData gameData;
+    if (parse_json(&gameData, "game.json")) {
+        fprintf(stderr, "Error: Failed to parse JSON\n");
+        send(socket, "false", 5, 0);
+        return -1;
+    }
 
-    // Save game state
-    save_game_state("game.json", game);
+    // Find game
+    int index = load_game(args[0], args[1]);
+    if (index < 0) {
+        send(socket, "false", 5, 0);
+        return -1;
+    }
 
-    // Broadcast game to players
-    broadcast_game_state();
+    int slot = convert_and_validate(args[2]);
+
+    if (slot < 0) {
+        send(socket, "false", 5, 0);
+        return -1;
+    }
+
+    // Perform the player's turn
+    play_turn(&gameData.games[index], slot - 1);
+
+    // Save the updated game data back to the JSON file
+    if (save_to_json(JSON_FILENAME, &gameData) != 0) {
+        fprintf(stderr, "Error: Failed to save updated game data to JSON\n");
+        return -1;
+    }
+
+    // Broadcast the updated game state to all players
+    char* json_string = game_to_json_string(&gameData.games[index]);
+
+    // Send the JSON string to the client
+    if (send(socket, json_string, strlen(json_string), 0) == -1) {
+        perror("Error sending game state");
+        free(json_string);  // Free the string created by cJSON_Print
+        return -1;
+    }
+
+    // Free the JSON objects after use
+    free(json_string);  // Free the string created by cJSON_Print
+    return 0;
 }

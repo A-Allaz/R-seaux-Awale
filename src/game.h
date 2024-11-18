@@ -11,6 +11,7 @@
 #define MAX_GAMES 100
 #define MAX_NAME_LENGTH 255
 #define BOARD_SIZE 12
+#define JSON_FILENAME "game.json"
 
 
 typedef enum {
@@ -227,7 +228,7 @@ int createGameFile() {
     }
 
     // Write the JSON string to a file
-    FILE *file = fopen("game.json", "w");
+    FILE *file = fopen(JSON_FILENAME, "w");
     if (!file) {
         fprintf(stderr, "Error opening file for writing\n");
         free(json_string);
@@ -344,6 +345,7 @@ int parse_json(GameData* gameData, const char *filename) {
     return 0;
 }
 
+// Save a given GameData struct into the JSON file
 int save_to_json(const char *filename, const GameData *data) {
     cJSON *json = cJSON_CreateObject();
 
@@ -396,269 +398,257 @@ int save_to_json(const char *filename, const GameData *data) {
     return 0;
 }
 
-// Function to read the content of a file into a string
-char* read_json_to_string(const char* filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        fprintf(stderr, "Error: Unable to open file %s\n", filename);
-        return NULL;
-    }
-
-    // Get the file size
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    rewind(file);
-
-    // Allocate memory for the file content
-    char *content = (char *) malloc(file_size + 1);
-    if (!content) {
-        fprintf(stderr, "Error: Memory allocation failed\n");
-        fclose(file);
-        return NULL;
-    }
-
-    // Read the file into the buffer
-    fread(content, 1, file_size, file);
-    content[file_size] = '\0'; // Null-terminate the string
-
-    fclose(file);
-    return content;
-}
-
-// Dynamically allocates memory to list of players
-char** get_online_players(int* count) {
-    // Initialize count to zero
-    *count = 0;
-
-
-
-    return game;
-}
-
-int save_game_state(const char *filename, Game *game) {
-    FILE *file = fopen("game.json", "r+");
-
-    if (file == NULL) {
-        printf("File 'game.json' does not exist. Creating it now...\n");
-
-        if (createGameFile()) {
-            printf("CRITICAL: Error creating game.json");
-            exit(1);
-        }
-
-        // Attempt to reopen
-        file = fopen(filename, "r+");
-        if (!file) {
-            perror("Error opening file");
-            exit(1);
-        }
-    }
-
-    // Read the entire file content into memory
-    fseek(file, 0, SEEK_END);
-    long length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *data = malloc(length + 1);
-    fread(data, 1, length, file);
-    data[length] = '\0';
-    fclose(file);
-
-    // Parse the existing JSON data
-    cJSON *json = cJSON_Parse(data);
-    if (json == NULL) {
-        printf("Error parsing JSON data\n");
-        free(data);
-        return 2;
-    }
-
-    // Extract the games array from the JSON
-    cJSON *games_array = cJSON_GetObjectItemCaseSensitive(json, "games");
-    if (!cJSON_IsArray(games_array)) {
-        // If the "games" array doesn't exist, create it
-        games_array = cJSON_CreateArray();
-        cJSON_AddItemToObject(json, "games", games_array);
-    }
-
-    // Flag to check if the game for the two users already exists
-    int game_found = 0;
-    cJSON *game_json = NULL;
-
-    // Iterate through the games array and check if the game exists for the given users
-    cJSON_ArrayForEach(game_json, games_array) {
-        cJSON *player0_json = cJSON_GetObjectItemCaseSensitive(game_json, "player0");
-        cJSON *player1_json = cJSON_GetObjectItemCaseSensitive(game_json, "player1");
-
-        // Check if the players match
-        if (player0_json && player1_json &&
-            strcmp(player0_json->valuestring, game->player0) == 0 &&
-            strcmp(player1_json->valuestring, game->player1) == 0) {
-            game_found = 1; // Game found, break out of the loop
-            break;
-        }
-    }
-
-    // If the game doesn't exist, create a new entry
-    if (!game_found) {
-        // Create a new game JSON object
-        game_json = cJSON_CreateObject();
-
-        // Add player names
-        cJSON_AddStringToObject(game_json, "player0", game->player0);
-        cJSON_AddStringToObject(game_json, "player1", game->player1);
-
-        // Add current turn
-        cJSON_AddNumberToObject(game_json, "currentState", game->current_state);
-
-        // Add scores
-        cJSON *score_json = cJSON_CreateObject();
-        cJSON_AddNumberToObject(score_json, "player0", game->score.player0);
-        cJSON_AddNumberToObject(score_json, "player1", game->score.player1);
-        cJSON_AddItemToObject(game_json, "score", score_json);
-
-        // Add board state
-        cJSON *board_array = cJSON_CreateIntArray(game->board, 12);
-        cJSON_AddItemToObject(game_json, "board", board_array);
-
-        // Add the new game object to the "games" array
-        cJSON_AddItemToArray(games_array, game_json);
-    } else {
-        // If the game is found, just update the existing game JSON object
-
-        // Update current turn
-        cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(game_json, "currentState"), game->current_state);
-
-        // Update scores
-        cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(game_json, "score")->child, game->score.player0);
-        cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(game_json, "score")->child->next, game->score.player1);
-
-        // Update board state
-        cJSON *board_array = cJSON_CreateIntArray(game->board, 12);
-        cJSON_ReplaceItemInObjectCaseSensitive(game_json, "board", board_array);
-    }
-
-    // Convert the updated JSON object back to a string
-    char *json_string = cJSON_Print(json);
-
-    // Write the updated JSON string to the file
-    file = fopen(filename, "w");
-    if (file) {
-        fprintf(file, "%s", json_string);
-        fclose(file);
-    } else {
-        perror("Error opening file for writing");
-        cJSON_Delete(json);
-        free(json_string);
-        return 3;
-    }
-
-    // Cleanup
-    cJSON_Delete(json);
-    free(data);
-    free(json_string);
-    return 0;
-}
-
-// Load the game between user0 and user1
-int load_game_state(const char *filename, Game *game, const char *user0, const char *user1) {
-    // Open the file and read its content
-    FILE *file = fopen(filename, "r");
-    if (!file) {
-        perror("Error opening file");
-        return 1;
-    }
-
-    fseek(file, 0, SEEK_END);
-    long length = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    char *data = malloc(length + 1);
-    fread(data, 1, length, file);
-    data[length] = '\0';
-    fclose(file);
-
-    // Parse JSON data
-    cJSON *json = cJSON_Parse(data);
-    if (json == NULL) {
-        printf("Error parsing JSON data\n");
-        free(data);
-        return 2;
-    }
-
-    // Extract the games array
-    cJSON *games_array = cJSON_GetObjectItemCaseSensitive(json, "games");
-    if (!cJSON_IsArray(games_array)) {
-        printf("Error: games array not found\n");
-        cJSON_Delete(json);
-        free(data);
-        return 3;
-    }
-
-    // Iterate through the games array and find the matching game
-    int game_found = 0;
-    cJSON *game_json = NULL;
-    cJSON_ArrayForEach(game_json, games_array) {
-        cJSON *player0_json = cJSON_GetObjectItemCaseSensitive(game_json, "player0");
-        cJSON *player1_json = cJSON_GetObjectItemCaseSensitive(game_json, "player1");
-
-        // Check if the players match
-        if (player0_json && player1_json &&
-            strcmp(player0_json->valuestring, user0) == 0 &&
-            strcmp(player1_json->valuestring, user1) == 0) {
-            game_found = 1;
-            break; // Game found, no need to continue searching
-        }
-    }
-
-    if (!game_found) {
-        printf("Game not found for the given players: %s, %s\n", user0, user1);
-        cJSON_Delete(json);
-        free(data);
-        return 4; // Return an error if game is not found
-    }
-
-    // Now, load the game data into the `game` structure
-    // Extract the current turn
-    game->current_state = cJSON_GetObjectItemCaseSensitive(game_json, "currentState")->valueint;
-
-    // Extract scores
-    cJSON *score_json = cJSON_GetObjectItemCaseSensitive(game_json, "score");
-    game->score.player0 = cJSON_GetObjectItemCaseSensitive(score_json, "player0")->valueint;
-    game->score.player1 = cJSON_GetObjectItemCaseSensitive(score_json, "player1")->valueint;
-
-    // Extract board state
-    cJSON *board_array = cJSON_GetObjectItemCaseSensitive(game_json, "board");
-    for (int i = 0; i < 12; i++) {
-        game->board[i] = cJSON_GetArrayItem(board_array, i)->valueint;
-    }
-
-    // Cleanup
-    cJSON_Delete(json);
-    free(data);
-    return 0;
-}
+//// Function to read the content of a file into a string
+//char* read_json_to_string(const char* filename) {
+//    FILE *file = fopen(filename, "r");
+//    if (!file) {
+//        fprintf(stderr, "Error: Unable to open file %s\n", filename);
+//        return NULL;
+//    }
+//
+//    // Get the file size
+//    fseek(file, 0, SEEK_END);
+//    long file_size = ftell(file);
+//    rewind(file);
+//
+//    // Allocate memory for the file content
+//    char *content = (char *) malloc(file_size + 1);
+//    if (!content) {
+//        fprintf(stderr, "Error: Memory allocation failed\n");
+//        fclose(file);
+//        return NULL;
+//    }
+//
+//    // Read the file into the buffer
+//    fread(content, 1, file_size, file);
+//    content[file_size] = '\0'; // Null-terminate the string
+//
+//    fclose(file);
+//    return content;
+//}
+//
+//int save_game_state(const char *filename, Game *game) {
+//    FILE *file = fopen(JSON_FILENAME, "r+");
+//
+//    if (file == NULL) {
+//        printf("File 'game.json' does not exist. Creating it now...\n");
+//
+//        if (createGameFile()) {
+//            printf("CRITICAL: Error creating game.json");
+//            exit(1);
+//        }
+//
+//        // Attempt to reopen
+//        file = fopen(filename, "r+");
+//        if (!file) {
+//            perror("Error opening file");
+//            exit(1);
+//        }
+//    }
+//
+//    // Read the entire file content into memory
+//    fseek(file, 0, SEEK_END);
+//    long length = ftell(file);
+//    fseek(file, 0, SEEK_SET);
+//
+//    char *data = malloc(length + 1);
+//    fread(data, 1, length, file);
+//    data[length] = '\0';
+//    fclose(file);
+//
+//    // Parse the existing JSON data
+//    cJSON *json = cJSON_Parse(data);
+//    if (json == NULL) {
+//        printf("Error parsing JSON data\n");
+//        free(data);
+//        return 2;
+//    }
+//
+//    // Extract the games array from the JSON
+//    cJSON *games_array = cJSON_GetObjectItemCaseSensitive(json, "games");
+//    if (!cJSON_IsArray(games_array)) {
+//        // If the "games" array doesn't exist, create it
+//        games_array = cJSON_CreateArray();
+//        cJSON_AddItemToObject(json, "games", games_array);
+//    }
+//
+//    // Flag to check if the game for the two users already exists
+//    int game_found = 0;
+//    cJSON *game_json = NULL;
+//
+//    // Iterate through the games array and check if the game exists for the given users
+//    cJSON_ArrayForEach(game_json, games_array) {
+//        cJSON *player0_json = cJSON_GetObjectItemCaseSensitive(game_json, "player0");
+//        cJSON *player1_json = cJSON_GetObjectItemCaseSensitive(game_json, "player1");
+//
+//        // Check if the players match
+//        if (player0_json && player1_json &&
+//            strcmp(player0_json->valuestring, game->player0) == 0 &&
+//            strcmp(player1_json->valuestring, game->player1) == 0) {
+//            game_found = 1; // Game found, break out of the loop
+//            break;
+//        }
+//    }
+//
+//    // If the game doesn't exist, create a new entry
+//    if (!game_found) {
+//        // Create a new game JSON object
+//        game_json = cJSON_CreateObject();
+//
+//        // Add player names
+//        cJSON_AddStringToObject(game_json, "player0", game->player0);
+//        cJSON_AddStringToObject(game_json, "player1", game->player1);
+//
+//        // Add current turn
+//        cJSON_AddNumberToObject(game_json, "currentState", game->current_state);
+//
+//        // Add scores
+//        cJSON *score_json = cJSON_CreateObject();
+//        cJSON_AddNumberToObject(score_json, "player0", game->score.player0);
+//        cJSON_AddNumberToObject(score_json, "player1", game->score.player1);
+//        cJSON_AddItemToObject(game_json, "score", score_json);
+//
+//        // Add board state
+//        cJSON *board_array = cJSON_CreateIntArray(game->board, 12);
+//        cJSON_AddItemToObject(game_json, "board", board_array);
+//
+//        // Add the new game object to the "games" array
+//        cJSON_AddItemToArray(games_array, game_json);
+//    } else {
+//        // If the game is found, just update the existing game JSON object
+//
+//        // Update current turn
+//        cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(game_json, "currentState"), game->current_state);
+//
+//        // Update scores
+//        cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(game_json, "score")->child, game->score.player0);
+//        cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(game_json, "score")->child->next, game->score.player1);
+//
+//        // Update board state
+//        cJSON *board_array = cJSON_CreateIntArray(game->board, 12);
+//        cJSON_ReplaceItemInObjectCaseSensitive(game_json, "board", board_array);
+//    }
+//
+//    // Convert the updated JSON object back to a string
+//    char *json_string = cJSON_Print(json);
+//
+//    // Write the updated JSON string to the file
+//    file = fopen(filename, "w");
+//    if (file) {
+//        fprintf(file, "%s", json_string);
+//        fclose(file);
+//    } else {
+//        perror("Error opening file for writing");
+//        cJSON_Delete(json);
+//        free(json_string);
+//        return 3;
+//    }
+//
+//    // Cleanup
+//    cJSON_Delete(json);
+//    free(data);
+//    free(json_string);
+//    return 0;
+//}
+//
+//// Load the game between user0 and user1
+//int load_game_state(const char *filename, Game *game, const char *user0, const char *user1) {
+//    // Open the file and read its content
+//    FILE *file = fopen(filename, "r");
+//    if (!file) {
+//        perror("Error opening file");
+//        return 1;
+//    }
+//
+//    fseek(file, 0, SEEK_END);
+//    long length = ftell(file);
+//    fseek(file, 0, SEEK_SET);
+//
+//    char *data = malloc(length + 1);
+//    fread(data, 1, length, file);
+//    data[length] = '\0';
+//    fclose(file);
+//
+//    // Parse JSON data
+//    cJSON *json = cJSON_Parse(data);
+//    if (json == NULL) {
+//        printf("Error parsing JSON data\n");
+//        free(data);
+//        return 2;
+//    }
+//
+//    // Extract the games array
+//    cJSON *games_array = cJSON_GetObjectItemCaseSensitive(json, "games");
+//    if (!cJSON_IsArray(games_array)) {
+//        printf("Error: games array not found\n");
+//        cJSON_Delete(json);
+//        free(data);
+//        return 3;
+//    }
+//
+//    // Iterate through the games array and find the matching game
+//    int game_found = 0;
+//    cJSON *game_json = NULL;
+//    cJSON_ArrayForEach(game_json, games_array) {
+//        cJSON *player0_json = cJSON_GetObjectItemCaseSensitive(game_json, "player0");
+//        cJSON *player1_json = cJSON_GetObjectItemCaseSensitive(game_json, "player1");
+//
+//        // Check if the players match
+//        if (player0_json && player1_json &&
+//            strcmp(player0_json->valuestring, user0) == 0 &&
+//            strcmp(player1_json->valuestring, user1) == 0) {
+//            game_found = 1;
+//            break; // Game found, no need to continue searching
+//        }
+//    }
+//
+//    if (!game_found) {
+//        printf("Game not found for the given players: %s, %s\n", user0, user1);
+//        cJSON_Delete(json);
+//        free(data);
+//        return 4; // Return an error if game is not found
+//    }
+//
+//    // Now, load the game data into the `game` structure
+//    // Extract the current turn
+//    game->current_state = cJSON_GetObjectItemCaseSensitive(game_json, "currentState")->valueint;
+//
+//    // Extract scores
+//    cJSON *score_json = cJSON_GetObjectItemCaseSensitive(game_json, "score");
+//    game->score.player0 = cJSON_GetObjectItemCaseSensitive(score_json, "player0")->valueint;
+//    game->score.player1 = cJSON_GetObjectItemCaseSensitive(score_json, "player1")->valueint;
+//
+//    // Extract board state
+//    cJSON *board_array = cJSON_GetObjectItemCaseSensitive(game_json, "board");
+//    for (int i = 0; i < 12; i++) {
+//        game->board[i] = cJSON_GetArrayItem(board_array, i)->valueint;
+//    }
+//
+//    // Cleanup
+//    cJSON_Delete(json);
+//    free(data);
+//    return 0;
+//}
 
 // Load game instance given a pair of usernames, returns NULL if error (no memory allocated)
-Game* load_game(const char* user0, const char* user1) {
-    Game *game = malloc(sizeof(Game));
-    if (game == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        return NULL;
+int load_game(const char* user0, const char* user1) {
+    // Load the game data from the JSON file
+    GameData gameData;
+    if (parse_json(&gameData, JSON_FILENAME)) {
+        fprintf(stderr, "Error: Failed to parse JSON\n");
+        return -1;
     }
 
-    int res = load_game_state("game.json", game, user0, user1);
-    if (res == 1) {
-        printf("Error opening file");
-    } else if (res == 2) {
-        printf("Error parsing JSON file");
-    } else if (res == 3) {
-        printf("Game with these users does not exist");
-    } else {
-        return game;
+    // Check if the game already exists
+    for (int i = 0; i < gameData.game_count; i++) {
+        if (strcmp(gameData.games[i].player0, game->player0) == 0 && strcmp(gameData.games[i].player1, game->player1) == 0) {
+            return i;
+        }
     }
 
-    free(game);
-    return NULL;
+    // If the game was not found, add it to the list
+    fprintf(stderr, "Error: Game not foound.\n");
+    return -1;
 }
 
 // Create game instance given both usernames

@@ -77,3 +77,62 @@ int interactive_play(Game *game) {
 
     return 0;
 }
+
+// Check a given slot is valid for make_move()
+int convert_and_validate(const char *str) {
+    // Convert the string to a long integer using strtol
+    char *endptr;
+    long result = strtol(str, &endptr, 10);  // base 10
+
+    // Check if the entire string was a valid number
+    if (*endptr != '\0') {
+        printf("Error: The string contains non-numeric characters.\n");
+        return -1;  // Return -1 to indicate invalid conversion
+    }
+
+    // Check for range: the number must be between 0 and 12
+    if (result < 0 || result > 12) {
+        printf("Error: The number must be between 0 and 12.\n");
+        return -1;
+    }
+
+    // Check for overflow/underflow conditions
+    if (result == LONG_MIN || result == LONG_MAX) {
+        printf("Error: Overflow or underflow occurred.\n");
+        return -1;
+    }
+
+    return (int) result;  // Return the converted value as an integer
+}
+
+// Convert a given game object to a json string
+char* game_to_json_string(Game* game) {
+    // Create the JSON object for the game
+    cJSON *game_json = cJSON_CreateObject();
+
+    // Add player names to the JSON
+    cJSON_AddStringToObject(game_json, "player0", game->player0);
+    cJSON_AddStringToObject(game_json, "player1", game->player1);
+
+    // Add the current game state to the JSON
+    cJSON_AddNumberToObject(game_json, "currentState", game->current_state);
+
+    // Add the score to the JSON
+    cJSON *score_json = cJSON_CreateObject();
+    cJSON_AddNumberToObject(score_json, "player0", game->score.player0);
+    cJSON_AddNumberToObject(score_json, "player1", game->score.player1);
+    cJSON_AddItemToObject(game_json, "score", score_json);
+
+    // Add the board state to the JSON
+    cJSON *board_json = cJSON_CreateArray();
+    for (int i = 0; i < 12; i++) {
+        cJSON_AddItemToArray(board_json, cJSON_CreateNumber(game->board[i]));
+    }
+    cJSON_AddItemToObject(game_json, "board", board_json);
+
+    // Convert the JSON object to a string
+    char* json = cJSON_Print(game_json);  // Converts to string, requires free()
+    cJSON_Delete(game_json);  // Free JSON object
+
+    return json;
+}

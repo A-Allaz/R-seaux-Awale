@@ -1,6 +1,5 @@
 #ifndef R_SEAUX_AWALE_GAME_H
 #define R_SEAUX_AWALE_GAME_H
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -566,3 +565,5 @@ Game* create_game(const char* user0, const char* user1) {
 
     return game;
 }
+
+#endif

@@ -20,10 +20,10 @@ int interactive_play(Game *game) {
         print_player_stats(game, 1);
         print_board_state(game);
 
-        if(game->currentTurn == 0){
+        if (game->current_state == MOVE_PLAYER_0){
             printf("%s'S TURN\t", game->player0);
         } else {
-            printf("%s'S TURN\t", game->player0);
+            printf("%s'S TURN\t", game->player1);
         }
         printf("\033[0;93m"); // Yellow
         printf("Surrender (0)\n");
@@ -53,16 +53,16 @@ int interactive_play(Game *game) {
                         printf("SURRENDER ? (0: NO / 1: YES):\n");
                     }
                 }
-                if (surrender == 1){
+                if (surrender == 1) {
                     // Change game state to over
                     return 1;
-                } else if(surrender == 0){
+                } else if (surrender == 0) {
                     break;
                 }
             }
 
-            if(slot >= 1){
-                if(play_turn(game, slot - 1)) {
+            if (slot >= 1) {
+                if (play_turn(game, slot - 1)) {
                     printf("Game is over\n");
                 } else {
                     printf("Game is ON\n");

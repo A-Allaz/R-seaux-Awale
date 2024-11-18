@@ -4,9 +4,68 @@
 
 #include "utils.h"
 #include "game.h"
+#include "network.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
+
+#define PORT_NO 3000
+#define SERVER_IP "127.0.0.1"
 
 int main(){
     char player_name[255];
+
+    int client_socket;
+    struct sockaddr_in serv_addr;
+
+    printf("Client starting...\n");
+
+    // Create the socket
+    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (client_socket < 0) {
+        perror("Could not open socket");
+        exit(EXIT_FAILURE);
+    }
+
+    // Set up the server address struct
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT_NO);
+
+    // Convert the server IP address
+    if (inet_pton(AF_INET, SERVER_IP, &serv_addr.sin_addr) <= 0) {
+        perror("Invalid address/Address not supported");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
+
+    // Connect to the server
+    if (connect(client_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Connection failed");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Connected to server at %s:%d\n", SERVER_IP, PORT_NO);
+
+    Request req;
+    req.action = 0;  // LOGIN action
+    strncpy(req.arguments[0], "LIST", 255);
+    req.arguments[1][0] = '\0';
+    req.arguments[2][0] = '\0';
+
+    // Send the request
+    if (send_request(client_socket, &req) == 0) {
+        printf("Request sent successfully.\n");
+    } else {
+        printf("Failed to send request.\n");
+    }
+
     Game *game = malloc(sizeof(Game));
     if (game == NULL) {
         fprintf(stderr, "Memory allocation failed\n");

@@ -80,6 +80,45 @@ int receive_request(int sockfd, Request *req) {
     return parse_request(buffer, req);
 }
 
+int send_request(int sockfd, const Request *req) {
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+
+    switch (req->action) {
+        case 0:
+            strcat(buffer, "LOGIN");
+            break;
+        case 1:
+            strcat(buffer, "CHALLENGE");
+            break;
+        case 2:
+            strcat(buffer, "ACCEPT");
+            break;
+        case 3:
+            strcat(buffer, "LIST");
+            break;
+        case 4:
+            strcat(buffer, "MOVE");
+            break;
+        default:
+            printf("Unknown action\n");
+            return -1;
+    }
+
+    // Serialize the arguments
+    for (int i = 0; i < 4 && req->arguments[i][0] != '\0'; i++) {
+        strcat(buffer, "?");  // Add delimiter
+        strncat(buffer, req->arguments[i], 255);  // Append argument
+    }
+
+    // Send the serialized request over the socket
+    ssize_t bytes_sent = send(sockfd, buffer, strlen(buffer), 0);
+    if (bytes_sent < 0) {
+        perror("Error sending data");
+        return -1;
+    }
+}
+
 
 int broadcast_game_state() {
 

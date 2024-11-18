@@ -20,9 +20,12 @@ int interactive_play(Game *game) {
         print_player_stats(game, 1);
         print_board_state(game);
 
-        printf("PLAYER%d'S TURN\n", game->currentTurn + 1);
+        printf("PLAYER%d'S TURN\t", game->currentTurn + 1);
+        printf("\033[0;93m");
+        printf("Surrender (0)\n");
+        printf("\033[0;94m");
         printf("=== Choose a slot (1 to 12): ===\n");
-        printf("Surrender (0):\n");
+        printf("\033[0;39m");
         
         while (1) {
             if (scanf("%d", &slot) != 1 || slot < 0 || slot > 12) {

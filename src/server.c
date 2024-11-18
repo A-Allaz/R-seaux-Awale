@@ -12,8 +12,6 @@
 
 #include "utils.h"
 
-int interactive_play(Game *game);
-
 int handle(int newsockfd);
 
 int list(int newsockfd);
@@ -177,42 +175,4 @@ int make_move(Game *game, int slot) {
 
     // Broadcast game to players
     broadcast_game_state();
-}
-
-int interactive_play(Game *game) {
-    int slot;
-    while(game->score.player0 < 25 && game->score.player1 < 25) {
-        clrscr();
-        if(play_turn(game, slot - 1)) {
-            printf("Game is over\n");
-        } else {
-            printf("Game is ON\n");
-        }
-        print_player_stats(game, 0);
-        print_player_stats(game, 1);
-        print_board_state(game);
-
-        printf("PLAYER%d'S TURN\n", game->current_state + 1);
-        printf("=== Choose a slot (1 to 12): ===\n");
-
-        while (1) {
-            // Attempt to read an integer
-            if (scanf("%d", &slot) == 1 && slot >= 1 && slot <= 12) {
-                break;  // Input is valid, break the loop
-            } else {
-                // Clear the invalid input from stdin buffer
-                while (getchar() != '\n'); // Flush the input buffer
-
-                // Display an error message
-                printf("Invalid input! Please enter a number between 1 and 12.\n");
-
-                // Prompt for input again
-                printf("Choose a slot (1-12):\n");
-            }
-        }
-
-        printf("You selected slot %d.\n", slot);
-    }
-
-    return 0;
 }

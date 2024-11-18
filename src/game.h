@@ -86,17 +86,28 @@ int compute_score(Game* game, int slot, int pebbles) {
 }
 
 int play_turn(Game* game, int slot) {
-    int pebbles = move_pebbles(game, slot);
-    compute_score(game, slot, pebbles);
+    // Checking victory conditions : if returns 1, the current player has won
 
-    // check victory : if returns 1, the current player won the game through points
-    if (game->current_state == MOVE_PLAYER_0 && game->score.player0 > 24) {
-        game->current_state = WIN_PLAYER_0;
+    int pebbles = move_pebbles(game, slot);
+
+    // Victory if opponent has no pebbles in its camp
+    int hasPebbles = 0; // Only for enemy player
+    for(int i = 0; i < 6; i++) {
+        if (game->board[((game->current_state + 1) % 2) * 6 + i] != 0) { // Checks the enemy's side
+            hasPebbles = 1;
+            break;
+        }
+    }
+
+    if(!hasPebbles) {
         return 1;
     }
 
-    if (game->current_state == MOVE_PLAYER_1 && game->score.player1 > 24) {
-        game->current_state = WIN_PLAYER_1;
+    compute_score(game, slot, pebbles);
+
+    // Victory if more than half the available points
+    if ((game->current_state == 0 && game->score.player0 > 24) ||
+        (game->current_state == 1 && game->score.player0 > 24)) {
         return 1;
     }
 
@@ -120,7 +131,7 @@ int print_board_state(Game* game) {
     for(int i = 0; i < 6; i++) {
         printf("|\t%d\t", game->board[i]);
         if(i == 5) {
-            printf("| -- player 1's side --\n");
+            printf("| -- %s's side --\n", game->player0);
         }
     }
 
@@ -130,15 +141,15 @@ int print_board_state(Game* game) {
         printf("\033[0;92m");
     }
 
-    for(int i = 6; i < 12; i++) {
+    for(int i = 11; i > 5; i--) {
         printf("|\t%d\t",game->board[i]);
-        if(i == 11) {
-            printf("| -- player 2's side --\n");
+        if(i == 6) {
+            printf("| -- %s's side --\n", game->player1);
         }
     }
 
     printf("\033[0;37m");
-    printf("\t(7)\t\t(8)\t\t(9)\t\t(10)\t\t(11)\t\t(12)\n\n");
+    printf("\t(12)\t\t(11)\t\t(10)\t\t(9)\t\t(8)\t\t(7)\n\n");
     printf("\033[0;39m");
 }
 

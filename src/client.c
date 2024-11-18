@@ -14,7 +14,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define PORT_NO 3000
+#define PORT_NO 3001
 #define SERVER_IP "127.0.0.1"
 
 int main(){
@@ -54,17 +54,19 @@ int main(){
     printf("Connected to server at %s:%d\n", SERVER_IP, PORT_NO);
 
     Request req;
-    req.action = 0;  // LOGIN action
-    strncpy(req.arguments[0], "LIST", 255);
+    req.action = LOGIN;
+    strncpy(req.arguments[0], "LOGIN", 255);
     req.arguments[1][0] = '\0';
     req.arguments[2][0] = '\0';
 
+    send(client_socket, "LIST", 4, 0);
+
     // Send the request
-    if (send_request(client_socket, &req) == 0) {
-        printf("Request sent successfully.\n");
-    } else {
-        printf("Failed to send request.\n");
-    }
+    // if (send_request(client_socket, &req) == 0) {
+    //     printf("Request sent successfully.\n");
+    // } else {
+    //     printf("Failed to send request.\n");
+    // }
 
     Game *game = malloc(sizeof(Game));
     if (game == NULL) {
@@ -91,6 +93,7 @@ int main(){
             } else {
                 printf("%s WINS\n", game->player1);
             }
+            free(game);
             return 1;
         }
 

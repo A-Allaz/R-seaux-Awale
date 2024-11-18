@@ -96,12 +96,6 @@ int convert_and_validate(const char *str) {
         return -1;
     }
 
-    // Check for overflow/underflow conditions
-    if (result == LONG_MIN || result == LONG_MAX) {
-        printf("Error: Overflow or underflow occurred.\n");
-        return -1;
-    }
-
     return (int) result;  // Return the converted value as an integer
 }
 

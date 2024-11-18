@@ -85,19 +85,19 @@ int send_request(int sockfd, const Request *req) {
     memset(buffer, 0, sizeof(buffer));
 
     switch (req->action) {
-        case 0:
+        case LOGIN:
             strcat(buffer, "LOGIN");
             break;
-        case 1:
+        case CHALLENGE:
             strcat(buffer, "CHALLENGE");
             break;
-        case 2:
+        case ACCEPT:
             strcat(buffer, "ACCEPT");
             break;
-        case 3:
+        case LIST:
             strcat(buffer, "LIST");
             break;
-        case 4:
+        case MOVE:
             strcat(buffer, "MOVE");
             break;
         default:

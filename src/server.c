@@ -25,7 +25,7 @@ int move(int socket, char args[3][255]);
 int accept_request(int socket, char args[3][255]);
 
 int main() {
-    const in_port_t PORT_NO = 3000;
+    const in_port_t PORT_NO = 3001;
     int server_socket, client_socket;
     socklen_t clilen;
 
@@ -113,6 +113,8 @@ int handle(int client_socket) {
         perror("error getting request");
         return 1;
     }
+
+    printf("Request : %s\n", req.arguments[0]);
 
     switch (req.action) {
         case LOGIN:

@@ -39,8 +39,9 @@ int main(){
         print_player_stats(game, 1);
         print_board_state(game);
 
-        if (game->current_state == MOVE_PLAYER_0) {
-            printf("%s'S TURN\t", game->player0);
+        if((game->current_state == MOVE_PLAYER_0 && !strcmp(game->player0, player_name)) 
+        || (game->current_state == MOVE_PLAYER_1 && !strcmp(game->player1, player_name))){
+            printf("%s'S TURN\t", player_name);
             printf("\033[0;93m"); // Yellow
             printf("Surrender (0)\n");
             printf("\033[0;94m"); // Blue

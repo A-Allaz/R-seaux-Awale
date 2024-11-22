@@ -92,6 +92,9 @@ int main() {
 }
 
 int handle(int client_socket, const int pid) {
+    bool logged_in = false;
+    char username[MAX_NAME_LENGTH] = {'\0'};
+
     while (true) {
         Request req = empty_request();
         if (receive_request(client_socket, &req)) {
@@ -103,7 +106,9 @@ int handle(int client_socket, const int pid) {
 
         switch (req.action) {
             case LOGIN: {
-                login(client_socket, req.arguments, pid);
+                if (! login(client_socket, req.arguments, username, pid)) {
+                    logged_in = true;  // set logged_in flag to true on successful login
+                }
                 continue;
             }
 
@@ -126,6 +131,32 @@ int handle(int client_socket, const int pid) {
                 move(client_socket, req.arguments, pid);
                 continue;
             }
+        }
+    }
+
+    // Log out at end
+    // Handle disconnection cleanup if user is logged in
+    if (logged_in) {
+        printf("%d User %s disconnected, logging out\n", pid, username);
+
+        GameData gameData;
+        if (parse_json(&gameData, "game.json") == 0) {
+            // Mark the user as offline
+            for (int i = 0; i < gameData.player_count; i++) {
+                if (strcmp(gameData.players[i].name, username) == 0) {
+                    gameData.players[i].online = false;
+                    break;
+                }
+            }
+
+            // Save updated game data to JSON
+            if (save_to_json("game.json", &gameData) != 0) {
+                fprintf(stderr, "%d Error: Failed to save updated game data to JSON\n", pid);
+            } else {
+                printf("%d Successfully logged out user %s\n", pid, username);
+            }
+        } else {
+            fprintf(stderr, "%d Error: Failed to parse game data for logout\n", pid);
         }
     }
 

@@ -10,7 +10,8 @@
 #include <sys/socket.h>
 
 #define BUFFER_SIZE 1024
-#define PORT_NO 3001
+#define PORT_NO 3000
+#define MAX_ARG_LENGTH 255
 
 // Initialise server given port no, and socket address. If error, halts program
 int initialize_server(in_port_t port, struct sockaddr_in *serv_addr) {
@@ -57,7 +58,7 @@ typedef enum {
 
 typedef struct {
     ACTION action;
-    char arguments[3][255];
+    char arguments[3][MAX_ARG_LENGTH];
 } Request;
 
 Request empty_request() {
@@ -187,7 +188,7 @@ int json_to_request(const char* json_string, Request* request) {
     for (int i = 0; i < 3; i++) {
         cJSON* argument_item = cJSON_GetArrayItem(arguments_array, i);
         if (cJSON_IsString(argument_item) && argument_item->valuestring) {
-            strncpy(request->arguments[i], argument_item->valuestring, 255);
+            strncpy(request->arguments[i], argument_item->valuestring, MAX_ARG_LENGTH);
         } else {
             request->arguments[i][0] = '\0';  // Empty string for missing/invalid items
         }

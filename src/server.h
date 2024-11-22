@@ -6,14 +6,22 @@
 #define AWALEGAME_SERVER_H
 
 #include "utils.h"
+#include "network.h"
 
 // Create new username if it doesn't already exist and mark as active. Return true for success, false for error
-int login(int socket, const char args[3][255], const int pid) {
+int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name, const int pid) {
     printf("%d LOGIN for socket: %d\n", pid, socket);
 
     GameData gameData;
     if (parse_json(&gameData, "game.json")) {
         fprintf(stderr, "%d Error: Failed to parse JSON\n", pid);
+        send(socket, "false", 5, 0);
+        return -1;
+    }
+
+    // Check that username is not longer than limit
+    if (strlen(args[0]) > MAX_NAME_LENGTH) {
+        fprintf(stderr, "%d Error: Name too long\n", pid);
         send(socket, "false", 5, 0);
         return -1;
     }
@@ -49,6 +57,7 @@ int login(int socket, const char args[3][255], const int pid) {
         return -1;
     }
 
+    strcpy(name, args[0]);
     send(socket, "true", 4, 0);
     return 0;
 }

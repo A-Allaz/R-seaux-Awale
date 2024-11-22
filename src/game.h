@@ -11,7 +11,7 @@
 
 #define MAX_PLAYERS 100
 #define MAX_GAMES 100
-#define MAX_NAME_LENGTH 255
+#define MAX_NAME_LENGTH 32
 #define BOARD_SIZE 12
 #define JSON_FILENAME "game.json"
 

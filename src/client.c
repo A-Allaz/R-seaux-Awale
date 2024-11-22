@@ -9,21 +9,23 @@
 #include "utils.h"
 #include "game.h"
 #include "network.h"
+#include "client.h"
 
 #define SERVER_IP "127.0.0.1"
 #define PORT_NO 3000
+#define BUFFER_SIZE 255
 
 int main() {
     char player_name[255];
 
-    int client_socket;
+    int server_socket;
     struct sockaddr_in serv_addr;
 
     printf("Client starting...\n");
 
     // Create the socket
-    client_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_socket < 0) {
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket < 0) {
         perror("Could not open socket\n");
         exit(EXIT_FAILURE);
     }
@@ -36,29 +38,91 @@ int main() {
     // Convert the server IP address
     if (inet_pton(AF_INET, SERVER_IP, &serv_addr.sin_addr) <= 0) {
         perror("Invalid address/Address not supported\n");
-        close(client_socket);
+        close(server_socket);
         exit(EXIT_FAILURE);
     }
 
     // Connect to the server
-    if (connect(client_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+    if (connect(server_socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
         perror("Connection failed\n");
-        close(client_socket);
+        close(server_socket);
         exit(EXIT_FAILURE);
     }
 
     printf("Connected to server at %s:%d\n", SERVER_IP, PORT_NO);
 
-//    Request req;
-//    req.action = LOGIN;
-//    strncpy(req.arguments[0], "LOGIN", 255);
-//    req.arguments[1][0] = '\0';
-//    req.arguments[2][0] = '\0';
+    printf("Welcome to Awalé\n");
+
+    // 1. Log in
+    char username[MAX_NAME_LENGTH + 2];  // +2 to account for '\n' and '\0'
+    printf("LOGIN // Enter username (max %d characters): ", MAX_NAME_LENGTH);
+    while (true) {
+        if (fgets(username, sizeof(username), stdin) != NULL) {
+            size_t len = strlen(username);
+
+            if (len > MAX_NAME_LENGTH) {
+                printf("Username too long. Please try again.\n");
+                // Clear the buffer
+                int c;
+                while ((c = getchar()) != '\n' && c != EOF);
+                continue;
+            }
+
+            // Check if there is a trailing newline
+            if (len > 0 && username[len - 1] == '\n') {
+                username[len - 1] = '\0';  // Remove newline
+                len --;  // Update the length variable
+            }
+
+            // Check if input is empty
+            if (len == 0) {
+                printf("Username cannot be empty.\n");
+                continue;
+            }
+
+            printf("Username accepted: %s\n", username);
+            // Attempt log in
+            if (login(server_socket, username)) {
+                fprintf(stderr, "Error: Could not log in\n");
+                continue;
+            }
+            break;
+        } else {
+            printf("Error reading input.\n");
+            return 1;
+        }
+    }
+
+    // 2. Show actions that user can do (help)
+    help();
+
+    // 3. Await user's action
+    char input[BUFFER_SIZE];
+    printf("AWALE //: ");
+    while (true) {
+        if (fgets(input, sizeof(input), stdin) == NULL) {
+            printf("Error reading input.\n");
+            return 1;
+        }
+
+        // Check what action was entered
+        if (strcmp(input, "list") == 0) {
+            list(server_socket);
+            continue;
+        }
+
+        // TODO complete for all and any possible action
+        // Each action should be fully handled within its helper function defined in client.h
+
+        break;
+    }
+
+    // Ideally the program should end here when the user enters quit or something
 
     Request req_chris;
     req_chris.action = LIST;
 
-    if (send_request(client_socket, &req_chris)) {
+    if (send_request(server_socket, &req_chris)) {
         perror("Error when sending request\n");
     } else {
         printf("Request sent successfully\n");

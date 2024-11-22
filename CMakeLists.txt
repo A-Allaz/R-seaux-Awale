@@ -16,7 +16,8 @@ add_executable(awale_server src/server.c cJSON/cJSON.c
         src/game.h
         src/network.h)
 add_executable(awale_client src/client.c cJSON/cJSON.c
-        src/network.h)
+        src/network.h
+        src/client.h)
 
 # Include the directory containing headers
 target_include_directories(awale_server PRIVATE src cJSON)

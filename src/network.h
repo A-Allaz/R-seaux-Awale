@@ -1,3 +1,8 @@
+//
+// Defines shared resources for communicating on the network.
+// To be used by both client and server
+//
+
 #ifndef AWALEGAME_REQUEST_H
 
 #define AWALEGAME_REQUEST_H

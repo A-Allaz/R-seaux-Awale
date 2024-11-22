@@ -21,7 +21,7 @@ int login(int socket, const char args[3][255], const int pid) {
     // Check if the username exists in the player list
     bool userExists = false;
     for (int i = 0; i < gameData.player_count; i++) {
-        if (strcmp(gameData.players[i].name, args[1]) == 0) {
+        if (strcmp(gameData.players[i].name, args[0]) == 0) {
             // Username exists, set the player as online
             gameData.players[i].online = true;
             userExists = true;
@@ -32,7 +32,7 @@ int login(int socket, const char args[3][255], const int pid) {
     // If the user does not exist, add them to the list
     if (!userExists) {
         if (gameData.player_count < MAX_PLAYERS) {
-            strcpy(gameData.players[gameData.player_count].name, args[1]);
+            strcpy(gameData.players[gameData.player_count].name, args[0]);
             gameData.players[gameData.player_count].online = true;
             gameData.player_count++; // Increment player count
         } else {

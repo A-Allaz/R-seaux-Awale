@@ -94,7 +94,7 @@ int main() {
     // 2. Show actions that user can do (help)
     help();
 
-    // 3. Await user's action
+    // 3. Await user's action (loops until program ends or user enters 'quit')
     char input[BUFFER_SIZE];
     while (true) {
         printf("AWALE //: ");
@@ -121,12 +121,12 @@ int main() {
         }
 
         if (strcmp(input, "challenge") == 0) {
-            // challenge(server_socket);
+            challenge(server_socket);
             continue;
         }
 
         if (strcmp(input, "resume") == 0) {
-            // resume(server_socket);
+            resume(server_socket);
             continue;
         }
 
@@ -141,15 +141,7 @@ int main() {
     }
 
     // Ideally the program should end here when the user enters quit or something
-
-    Request req_chris = empty_request();
-    req_chris.action = LIST;
-
-    if (send_request(server_socket, &req_chris)) {
-        perror("Error when sending request\n");
-    } else {
-        printf("Request sent successfully\n");
-    }
+    return 0;
 
     Game *game = malloc(sizeof(Game));
     if (game == NULL) {

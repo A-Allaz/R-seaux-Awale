@@ -54,13 +54,56 @@ int list(int server) {
     return 0;
 }
 
-int help() {
+// TODO: Challenge a player. Return -1 if there is an error
+int challenge(int server) {
+    printf("Not yet implemented\n");
+//    Request req = empty_request();
+//    req.action = LIST;
+//    if (send_request(server, &req)) {
+//        fprintf(stderr, "Error: Could not send request.\n");
+//        return -1;
+//    }
+//
+//    char* res = read_response(server);
+//    if (res == NULL) {
+//        fprintf(stderr, "Error: Could not retrieve list of online users.\n");
+//        return -1;
+//    }
+//
+//    printf("Online users: %s\n", res);
+//    free(res);
+    return 0;
+}
+
+// TODO: Resume a game currently in progress. Return -1 if there is an error
+int resume(int server) {
+    printf("Not yet implemented\n");
+//    Request req = empty_request();
+//    req.action = LIST;
+//    if (send_request(server, &req)) {
+//        fprintf(stderr, "Error: Could not send request.\n");
+//        return -1;
+//    }
+//
+//    char* res = read_response(server);
+//    if (res == NULL) {
+//        fprintf(stderr, "Error: Could not retrieve list of online users.\n");
+//        return -1;
+//    }
+//
+//    printf("Online users: %s\n", res);
+//    free(res);
+    return 0;
+}
+
+void help() {
     printf("There are several actions you can perform once you have logged in.\n");
     printf("You can perform these actions whenever the prompt starts with 'AWALE //:'\n");
     printf("\u2022 help      - show this panel again\n");
     printf("\u2022 list      - list all currently online players\n");
     printf("\u2022 challenge - challenge a player\n");
     printf("\u2022 resume    - start or resume a game\n");
+    printf("\u2022 quit      - log out and quit game\n");
 }
 
 #endif //AWALEGAME_CLIENT_H

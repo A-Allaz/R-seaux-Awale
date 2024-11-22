@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 
 #define BUFFER_SIZE 1024
+#define PORT_NO 3001
 
 // Initialise server given port no, and socket address. If error, halts program
 int initialize_server(in_port_t port, struct sockaddr_in *serv_addr) {
@@ -58,6 +59,15 @@ typedef struct {
     ACTION action;
     char arguments[3][255];
 } Request;
+
+Request empty_request() {
+    Request req;
+    req.action = LOGIN;
+    strcpy(req.arguments[0], "");
+    strcpy(req.arguments[1], "");
+    strcpy(req.arguments[2], "");
+    return req;
+}
 
 const char* action_to_string(ACTION action) {
     switch (action) {
@@ -215,11 +225,12 @@ int receive_request(int socket_from, Request* req) {
     strncpy(json_string, buffer, bytes_received);
     json_string[bytes_received] = '\0';
 
-    printf("JSON Received: %s\n", json_string);
+//    printf("JSON Received: %s\n", json_string);
 
     // Form request object from JSON string
     if (json_to_request(json_string, req)) {
         perror("Error forming Request object from retrieved JSON\n");
+        free(json_string);
         return -1;
     }
 
@@ -229,6 +240,7 @@ int receive_request(int socket_from, Request* req) {
 
 // Send a Request to a socket
 int send_request(int socket_to, const Request* req) {
+//    printf("Sending %s request\n", action_to_string(req->action));
     char* json = request_to_json(req);
 
     if (json == NULL) {
@@ -236,7 +248,7 @@ int send_request(int socket_to, const Request* req) {
         return -1;
     }
 
-    printf("JSON to send: %s\n", json);
+//    printf("JSON to send: %s\n", json);
 
     // Send the serialized request over the socket_to
     ssize_t bytes_sent = send(socket_to, json, strlen(json), 0);
@@ -246,6 +258,44 @@ int send_request(int socket_to, const Request* req) {
         return -1;
     }
     return 0;
+}
+
+// Read response (intended to be used to read responses from server) - returned value must be freed
+char* read_response(int socket) {
+    char buffer[BUFFER_SIZE];  // Temporary buffer for reading
+    char *result = NULL;       // Pointer to hold the full string
+    size_t result_size = 0;    // Size of the dynamically allocated result buffer
+    ssize_t bytes_received;
+
+    while ((bytes_received = recv(socket, buffer, BUFFER_SIZE - 1, 0)) > 0) {
+        buffer[bytes_received] = '\0';  // Null-terminate the chunk
+
+        // Allocate or expand memory for the result buffer
+        char *new_result = realloc(result, result_size + bytes_received + 1);
+        if (!new_result) {
+            perror("realloc failed");
+            free(result);
+            return NULL;
+        }
+        result = new_result;
+
+        // Append the received chunk to the result buffer
+        memcpy(result + result_size, buffer, bytes_received + 1);
+        result_size += bytes_received;
+
+        // Optional: Stop reading if you detect a termination condition
+        if (strchr(buffer, '\0')) {  // If a null terminator is received, stop
+            break;
+        }
+    }
+
+    if (bytes_received < 0) {
+        perror("recv failed");
+        free(result);
+        return NULL;
+    }
+
+    return result;  // Caller is responsible for freeing the memory
 }
 
 #endif

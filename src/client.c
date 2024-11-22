@@ -12,8 +12,6 @@
 #include "client.h"
 
 #define SERVER_IP "127.0.0.1"
-#define PORT_NO 3000
-#define BUFFER_SIZE 255
 
 int main() {
     char player_name[255];
@@ -98,28 +96,53 @@ int main() {
 
     // 3. Await user's action
     char input[BUFFER_SIZE];
-    printf("AWALE //: ");
     while (true) {
+        printf("AWALE //: ");
         if (fgets(input, sizeof(input), stdin) == NULL) {
             printf("Error reading input.\n");
             return 1;
         }
 
-        // Check what action was entered
+        // Check if there is a trailing newline
+        size_t len = strlen(input);
+        if (len > 0 && input[len - 1] == '\n') {
+            input[len - 1] = '\0';  // Remove newline
+        }
+
+        // Check what action was entered:
+        if (strcmp(input, "help") == 0) {
+            help();
+            continue;
+        }
+
         if (strcmp(input, "list") == 0) {
             list(server_socket);
             continue;
         }
 
-        // TODO complete for all and any possible action
-        // Each action should be fully handled within its helper function defined in client.h
+        if (strcmp(input, "challenge") == 0) {
+            // challenge(server_socket);
+            continue;
+        }
 
-        break;
+        if (strcmp(input, "resume") == 0) {
+            // resume(server_socket);
+            continue;
+        }
+
+        if (strcmp(input, "quit") == 0) {
+            close(server_socket);
+            printf("Logged out");
+            break;
+        }
+
+        printf("Invalid command, please try again.\n");
+        printf("(Enter help to see list of commands)\n");
     }
 
     // Ideally the program should end here when the user enters quit or something
 
-    Request req_chris;
+    Request req_chris = empty_request();
     req_chris.action = LIST;
 
     if (send_request(server_socket, &req_chris)) {

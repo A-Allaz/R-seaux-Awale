@@ -12,12 +12,19 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 #add_subdirectory(src)
 
 # Define the executable target for the main application
-add_executable(awale_server src/server.c cJSON/cJSON.c
+add_executable(awale_server
+        src/server.c
+        src/server.h
         src/game.h
-        src/network.h)
-add_executable(awale_client src/client.c cJSON/cJSON.c
         src/network.h
-        src/client.h)
+        cJSON/cJSON.c
+)
+add_executable(awale_client
+        src/client.c
+        src/client.h
+        src/network.h
+        cJSON/cJSON.c
+)
 
 # Include the directory containing headers
 target_include_directories(awale_server PRIVATE src cJSON)

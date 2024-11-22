@@ -1,3 +1,8 @@
+//
+// Defines shared resources for representing a game.
+// To be used by both client and server
+//
+
 #ifndef R_SEAUX_AWALE_GAME_H
 
 #define R_SEAUX_AWALE_GAME_H

@@ -414,17 +414,13 @@ int save_to_json(const char *filename, const GameData *data) {
 }
 
 // Load game instance given a pair of usernames, returns NULL if error (no memory allocated)
-int find_game(const char* user0, const char* user1) {
+int find_game(const char* user0, const char* user1, const GameData* gameData) {
     // Load the game data from the JSON file
-    GameData gameData;
-    if (parse_json(&gameData, JSON_FILENAME)) {
-        fprintf(stderr, "Error: Failed to parse JSON\n");
-        return -1;
-    }
 
     // Check if the game already exists
-    for (int i = 0; i < gameData.game_count; i++) {
-        if (strcmp(gameData.games[i].player0, user0) == 0 && strcmp(gameData.games[i].player1, user1) == 0) {
+    for (int i = 0; i < gameData->game_count; i++) {
+        if ((strcmp(gameData->games[i].player0, user0) == 0 && strcmp(gameData->games[i].player1, user1) == 0) ||
+            (strcmp(gameData->games[i].player0, user1) == 0 && strcmp(gameData->games[i].player1, user0) == 0)) {
             return i;
         }
     }

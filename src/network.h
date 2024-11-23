@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 
 #define BUFFER_SIZE 1024
-#define PORT_NO 3001
+#define PORT_NO 3000
 #define MAX_ARG_LENGTH 255
 
 // Initialise server given port no, and socket address. If error, halts program
@@ -267,7 +267,7 @@ int send_request(int socket_to, const Request* req) {
     ssize_t bytes_sent = send(socket_to, json, strlen(json), 0);
     free(json);  // Free the json string regardless of success or failure
     if (bytes_sent < 0) {
-        perror("Error sending data");
+        perror("Error sending data\n");
         return -1;
     }
     return 0;
@@ -286,7 +286,7 @@ char* read_response(int socket) {
         // Allocate or expand memory for the result buffer
         char *new_result = realloc(result, result_size + bytes_received + 1);
         if (!new_result) {
-            perror("realloc failed");
+            perror("realloc failed\n");
             free(result);
             return NULL;
         }
@@ -303,7 +303,7 @@ char* read_response(int socket) {
     }
 
     if (bytes_received < 0) {
-        perror("recv failed");
+        perror("recv failed\n");
         free(result);
         return NULL;
     }

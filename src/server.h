@@ -178,17 +178,9 @@ int get_game(int socket, char args[3][255], const int pid) {
     }
 
     // Find the game where players match args[0] and args[1] in any order
-    Game* found_game = NULL;
-    for (int i = 0; i < gameData.game_count; i++) {
-        Game* game = &gameData.games[i];
-        if ((strcmp(game->player0, args[0]) == 0 && strcmp(game->player1, args[1]) == 0) ||
-            (strcmp(game->player0, args[1]) == 0 && strcmp(game->player1, args[0]) == 0)) {
-            found_game = game;
-            break;
-        }
-    }
+    int index = find_game(args[0], args[1], &gameData);
 
-    if (found_game == NULL) {
+    if (index < 0) {
         // No game found
         fprintf(stderr, "%d Error: No game found for players %s and %s\n", pid, args[0], args[1]);
         send(socket, "false", 5, 0);
@@ -196,14 +188,14 @@ int get_game(int socket, char args[3][255], const int pid) {
     }
 
     // Convert the found game to a JSON string
-    char* json_string = game_to_json_string(found_game);
+    char* json_string = game_to_json_string(&(gameData.games[index]));
     if (json_string == NULL) {
         fprintf(stderr, "%d Error: Failed to convert game to JSON\n", pid);
         send(socket, "false", 5, 0);
         return -1;
     }
 
-    printf("Sending: %s", json_string);
+    printf("Sending: %s\n", json_string);
 
     // Send the JSON string to the client
     if (send(socket, json_string, strlen(json_string), 0) == -1) {
@@ -273,7 +265,7 @@ int move(int socket, char args[3][255], const int pid) {
     }
 
     // Find game
-    int index = find_game(args[0], args[1]);
+    int index = find_game(args[0], args[1], &gameData);
     if (index < 0) {
         send(socket, "false", 5, 0);
         return -1;

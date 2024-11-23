@@ -171,10 +171,7 @@ int decline(int socket, char args[3][255], const int pid) {
 
 int get_game(int socket, char args[3][255], const int pid) {
     printf("%d GAME for socket: %d\n", pid, socket);
-    printf("req.args[0]: %s\n",args[0]);
-    printf("req.args[1]: %s\n",args[1]);
-    printf("req.args[2]: %s\n",args[2]);
-    //load_game(args[]);
+    int i  = load_game(args[0], args[1]);
     fprintf(stderr, "Not yet implemented\n");
     return 0;
 }

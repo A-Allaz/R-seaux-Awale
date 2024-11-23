@@ -423,7 +423,10 @@ int load_game(const char* user0, const char* user1) {
 
     // Check if the game already exists
     for (int i = 0; i < gameData.game_count; i++) {
-        if (strcmp(gameData.games[i].player0, user0) == 0 && strcmp(gameData.games[i].player1, user1) == 0) {
+        if ((strcmp(gameData.games[i].player0, user0) == 0 && strcmp(gameData.games[i].player1, user1) == 0)
+            || (strcmp(gameData.games[i].player0, user1) == 0 && strcmp(gameData.games[i].player1, user0) == 0)
+        ) {
+            printf("Game found.\n");
             return i;
         }
     }

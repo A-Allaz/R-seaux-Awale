@@ -69,8 +69,11 @@ int init_score(Game* game) {
 }
 
 int init_game(Game *game, const char* player0, const char* player1) {
-    strcpy(game->player0, player0);
-    strcpy(game->player1, player1);
+    strncpy(game->player0, player0, MAX_NAME_LENGTH);
+    strncpy(game->player1, player1, MAX_NAME_LENGTH);
+    game->player0[MAX_NAME_LENGTH] = '\0';
+    game->player1[MAX_NAME_LENGTH] = '\0';
+
     game->current_state = MOVE_PLAYER_0;
     init_score(game);
     for (int i = 0; i < 12; i++) {

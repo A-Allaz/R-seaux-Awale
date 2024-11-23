@@ -103,7 +103,6 @@ int list(int socket, char args[3][255], const int pid) {
     return 0;
 }
 
-// TODO
 int challenge(int socket, char args[3][255], const int pid) {
     printf("%d CHALLENGE for socket: %d\n", pid, socket);
 
@@ -134,13 +133,25 @@ int challenge(int socket, char args[3][255], const int pid) {
         return -1;
     }
 
-    // If not, assume acceptation and create new game in game data
-    Game game;
-    create_game(&game, args[0], args[1]);
+    // If not, assume acceptance and create a new game
+    if (gameData.game_count >= MAX_GAMES) {
+        fprintf(stderr, "%d Error: Maximum number of games reached\n", pid);
+        send(socket, "false", 5, 0);
+        return -1;
+    }
 
-    // TODO: save game in json file
+    Game *newGame = &gameData.games[gameData.game_count];
+    create_game(newGame, args[0], args[1]);
+    gameData.game_count++;
 
-    return -1;
+    if (save_to_json(JSON_FILENAME, &gameData)) {
+        fprintf(stderr, "%d Error: could not update json file\n", pid);
+        send(socket, "false", 5, 0);
+        return -1;
+    }
+
+    send(socket, "true", 4, 0);
+    return 0;
 }
 
 // TODO

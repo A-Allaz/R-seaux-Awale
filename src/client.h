@@ -325,7 +325,7 @@ int challenge(int server, char* username) {
     Request req = empty_request();
     req.action = CHALLENGE;
     strcpy(req.arguments[0], username);
-    strcpy(req.arguments[0], chosen_user);
+    strcpy(req.arguments[1], chosen_user);
 
     if (send_request(server, &req)) {
         fprintf(stderr, "Error: Could not send request.\n");
@@ -378,7 +378,7 @@ int play(int server, char* username) {
         return 0;
     }
 
-    printf("You current games:\n");
+    printf("Your current games:\n");
     for (int i = 0; i < len_games; i++) {
         printf("%d. Me <--> %s\n", i+1, users_games[i]);
     }

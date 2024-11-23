@@ -137,6 +137,7 @@ int play_game(int server, char* username, char* chosen_user) {
     // 2. Await user's action (loops until game ends or user enters 'back')
     char input[BUFFER_SIZE];
     while (true) {
+        while (getchar() != '\n'); // Flush the input buffer
         clrscr();
 
         // Print stats out to user
@@ -144,18 +145,24 @@ int play_game(int server, char* username, char* chosen_user) {
         print_player_stats(&game, 1);
         print_board_state(&game);
 
+        printf("is playing : %d\n", (game.current_state == MOVE_PLAYER_0 && is_player0) ||
+            (game.current_state == MOVE_PLAYER_1 && ! is_player0));
+        printf("is not playing : %d\n", (game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
+            (game.current_state == MOVE_PLAYER_1 && is_player0));
+
         // Current player's turn
         if ((game.current_state == MOVE_PLAYER_0 && is_player0) ||
             (game.current_state == MOVE_PLAYER_1 && ! is_player0)) {
             printf("GAME (enter 'back' to go home) // Choose your move: ");
-        }
-
-        // Other player's turn
-        else if ((game.current_state == MOVE_PLAYER_0 && is_player0) ||
-            (game.current_state == MOVE_PLAYER_1 && ! is_player0)) {
+        } else if ((game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
+                   (game.current_state == MOVE_PLAYER_1 && is_player0)) {   // Other player's turn
             printf("Waiting for other player to move\n");
-            break;
-            // TODO: handle waiting for other player
+            
+            if (receive_game(server, &game)) {
+                return -1;
+            }
+            printf("Hello\n");
+            continue;
         }
 
         // Player has won

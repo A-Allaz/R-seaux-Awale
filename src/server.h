@@ -286,7 +286,12 @@ int move(int socket, char args[3][255], const int pid) {
     }
 
     // Perform the player's turn
-    play_turn(&gameData.games[index], slot - 1);
+    int has_won = play_turn(&gameData.games[index], slot - 1);
+    if(has_won && gameData.games[index].current_state == MOVE_PLAYER_0){
+        gameData.games[index].current_state = WIN_PLAYER_0;
+    } else if(has_won && gameData.games[index].current_state == MOVE_PLAYER_1){
+        gameData.games[index].current_state = WIN_PLAYER_1;
+    }
 
     // Save the updated game data back to the JSON file
     if (save_to_json(JSON_FILENAME, &gameData) != 0) {

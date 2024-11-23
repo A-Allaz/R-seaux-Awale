@@ -107,7 +107,7 @@ char** get_current_games(int server, char* username, int* no_users) {
     return res1;
 }
 
-// Handle game presentation for client
+// TODO: (incomplete) Handle game presentation for client
 int play_game(int server, char* username, char* chosen_user) {
     printf("Resuming game against %s.\n", chosen_user);
 
@@ -123,21 +123,8 @@ int play_game(int server, char* username, char* chosen_user) {
         return -1;
     }
 
-    char* res = read_response(server);
-    if (res == NULL) {
-        fprintf(stderr, "Error: Could not retrieve list of online active_users.\n");
-        return -1;
-    }
-
-    if (strcmp(res, "false") == 0) {
-        fprintf(stderr, "Error: Game does not exist.\n");
-        free(res);
-        return -1;
-    }
-
     Game game;
     if (receive_game(server, &game)) {
-        free(res);
         return -1;
     }
 
@@ -150,14 +137,11 @@ int play_game(int server, char* username, char* chosen_user) {
     // 2. Await user's action (loops until game ends or user enters 'back')
     char input[BUFFER_SIZE];
     while (true) {
-        // Print stats out to user
-        printf("Your stats:\n");
-        if (is_player0) {
-            print_player_stats(&game, 0);
-        } else {
-            print_player_stats(&game, 1);
-        }
+        clrscr();
 
+        // Print stats out to user
+        print_player_stats(&game, 0);
+        print_player_stats(&game, 1);
         print_board_state(&game);
 
         // Current player's turn
@@ -170,6 +154,7 @@ int play_game(int server, char* username, char* chosen_user) {
         else if ((game.current_state == MOVE_PLAYER_0 && is_player0) ||
             (game.current_state == MOVE_PLAYER_1 && ! is_player0)) {
             printf("Waiting for other player to move\n");
+            break;
             // TODO: handle waiting for other player
         }
 
@@ -373,7 +358,6 @@ int respond(int server, char* username) {
     return 0;
 }
 
-// TODO: Still incomplete (see play_game function)
 int play(int server, char* username) {
     // 1. Display all the user's games
     int len_games;

@@ -273,7 +273,7 @@ int move(int socket, char args[3][255], const int pid) {
     }
 
     // Find game
-    int index = load_game(args[0], args[1]);
+    int index = find_game(args[0], args[1]);
     if (index < 0) {
         send(socket, "false", 5, 0);
         return -1;

@@ -7,6 +7,7 @@
 
 #include "utils.h"
 #include "network.h"
+#include "game.h"
 
 // Create new username if it doesn't already exist and mark as active. Return true for success, false for error
 int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name, const int pid) {
@@ -170,6 +171,10 @@ int decline(int socket, char args[3][255], const int pid) {
 
 int get_game(int socket, char args[3][255], const int pid) {
     printf("%d GAME for socket: %d\n", pid, socket);
+    printf("req.args[0]: %s\n",args[0]);
+    printf("req.args[1]: %s\n",args[1]);
+    printf("req.args[2]: %s\n",args[2]);
+    //load_game(args[]);
     fprintf(stderr, "Not yet implemented\n");
     return 0;
 }

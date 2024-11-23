@@ -116,7 +116,7 @@ int play_game(int server, char* username, char* chosen_user) {
     Request req = empty_request();
     req.action = GAME;
     strcpy(req.arguments[0], username);
-    strcpy(req.arguments[0], chosen_user);
+    strcpy(req.arguments[1], chosen_user);
 
     if (send_request(server, &req)) {
         fprintf(stderr, "Error: Could not send request.\n");
@@ -208,8 +208,8 @@ int play_game(int server, char* username, char* chosen_user) {
         req = empty_request();
         req.action = MOVE;
         strcpy(req.arguments[0], username);
-        strcpy(req.arguments[0], chosen_user);
-        sprintf(req.arguments[0], "%d", slot);
+        strcpy(req.arguments[1], chosen_user);
+        sprintf(req.arguments[2], "%d", slot);
 
         // Make move
         if (send_request(server, &req)) {

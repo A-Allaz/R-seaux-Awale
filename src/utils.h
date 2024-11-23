@@ -99,7 +99,7 @@ int convert_and_validate(const char *str, const int min, const int max) {
 }
 
 // Convert a given game object to a json string
-char* game_to_json_string(Game* game) {
+char* game_to_json_string(const Game* game) {
     // Create the JSON object for the game
     cJSON *game_json = cJSON_CreateObject();
 

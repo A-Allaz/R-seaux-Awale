@@ -116,7 +116,7 @@ int play_game(int server, char* username, char* chosen_user) {
     Request req = empty_request();
     req.action = GAME;
     strcpy(req.arguments[0], username);
-    strcpy(req.arguments[0], chosen_user);
+    strcpy(req.arguments[1], chosen_user);
 
     if (send_request(server, &req)) {
         fprintf(stderr, "Error: Could not send request.\n");
@@ -136,9 +136,10 @@ int play_game(int server, char* username, char* chosen_user) {
     }
 
     Game game;
-    // TODO: handle receiving a game object from server
-    free(res);
-
+    if (receive_game(server, &game)) {
+        free(res);
+        return -1;
+    }
 
     // Check whether current user is player 0 or 1
     bool is_player0 = false;
@@ -149,6 +150,16 @@ int play_game(int server, char* username, char* chosen_user) {
     // 2. Await user's action (loops until game ends or user enters 'back')
     char input[BUFFER_SIZE];
     while (true) {
+        // Print stats out to user
+        printf("Your stats:\n");
+        if (is_player0) {
+            print_player_stats(&game, 0);
+        } else {
+            print_player_stats(&game, 1);
+        }
+
+        print_board_state(&game);
+
         // Current player's turn
         if ((game.current_state == MOVE_PLAYER_0 && is_player0) ||
             (game.current_state == MOVE_PLAYER_1 && ! is_player0)) {
@@ -218,19 +229,9 @@ int play_game(int server, char* username, char* chosen_user) {
         }
 
         // Get back false / new board state
-        res = read_response(server);
-        if (res == NULL) {
-            fprintf(stderr, "Error: Could not read from server.\n");
+        if (receive_game(server, &game)) {
             return -1;
         }
-        if (strcmp(res, "false") == 0) {
-            fprintf(stderr, "Error: Could not make move try again.\n");
-            free(res);
-            continue;
-        }
-
-        // TODO: read new game state from server and update game
-        free(res);
     }
 
     return 0;

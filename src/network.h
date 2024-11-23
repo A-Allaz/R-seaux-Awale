@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 
 #define BUFFER_SIZE 1024
-#define PORT_NO 3000
+#define PORT_NO 3001
 #define MAX_ARG_LENGTH 255
 
 // Initialise server given port no, and socket address. If error, halts program
@@ -309,6 +309,70 @@ char* read_response(int socket) {
     }
 
     return result;  // Caller is responsible for freeing the memory
+}
+
+// TODO: Read game object from socket
+int receive_game(int socket, Game* game) {
+    char buffer[BUFFER_SIZE];
+    memset(buffer, 0, BUFFER_SIZE);
+
+    // Receive the JSON string from the server
+    int bytes_received = recv(socket, buffer, BUFFER_SIZE - 1, 0);
+    if (bytes_received <= 0) {
+        fprintf(stderr, "Error: Failed to receive game state\n");
+        return -1;
+    }
+
+    // Null-terminate the received string
+    buffer[bytes_received] = '\0';
+
+    // Parse the JSON string into the Game structure
+    cJSON* game_json = cJSON_Parse(buffer);
+    if (game_json == NULL) {
+        fprintf(stderr, "Error: Failed to parse JSON\n");
+        return -1;
+    }
+
+    // Extract player0 and player1
+    cJSON* player0_json = cJSON_GetObjectItem(game_json, "player0");
+    cJSON* player1_json = cJSON_GetObjectItem(game_json, "player1");
+    if (player0_json && player1_json) {
+        strncpy(game->player0, player0_json->valuestring, MAX_NAME_LENGTH);
+        strncpy(game->player1, player1_json->valuestring, MAX_NAME_LENGTH);
+    }
+
+    // Extract current game state
+    cJSON* state_json = cJSON_GetObjectItem(game_json, "currentState");
+    if (state_json) {
+        game->current_state = (GAME_STATE)state_json->valueint;
+    }
+
+    // Extract the score
+    cJSON* score_json = cJSON_GetObjectItem(game_json, "score");
+    if (score_json) {
+        cJSON* player0_score_json = cJSON_GetObjectItem(score_json, "player0");
+        cJSON* player1_score_json = cJSON_GetObjectItem(score_json, "player1");
+        if (player0_score_json && player1_score_json) {
+            game->score.player0 = player0_score_json->valueint;
+            game->score.player1 = player1_score_json->valueint;
+        }
+    }
+
+    // Extract the board
+    cJSON* board_json = cJSON_GetObjectItem(game_json, "board");
+    if (board_json && cJSON_IsArray(board_json)) {
+        int board_size = cJSON_GetArraySize(board_json);
+        for (int i = 0; i < board_size && i < BOARD_SIZE; i++) {
+            cJSON* cell_json = cJSON_GetArrayItem(board_json, i);
+            if (cell_json) {
+                game->board[i] = cell_json->valueint;
+            }
+        }
+    }
+
+    // Clean up
+    cJSON_Delete(game_json);
+    return 0;
 }
 
 #endif

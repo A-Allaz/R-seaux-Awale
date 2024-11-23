@@ -113,7 +113,34 @@ int challenge(int socket, char args[3][255], const int pid) {
         return -1;
     }
 
-    return 0;
+    // Get game data from json
+    GameData gameData;
+    if (parse_json(&gameData, "game.json")) {
+        fprintf(stderr, "%d Error: Failed to parse JSON\n", pid);
+        return -1;
+    }
+
+    // Check there is not already a game between these two
+    bool exists = false;
+    for (int i = 0; i < gameData.game_count; i++) {
+        if ((strcmp(gameData.games[i].player0, args[0]) == 0 && strcmp(gameData.games[i].player1, args[1]) == 0) ||
+        (strcmp(gameData.games[i].player0, args[1]) == 0 && strcmp(gameData.games[i].player1, args[0]) == 0)) {
+            exists = true;
+            break;
+        }
+    }
+    if (exists) {
+        send(socket, "false", 5, 0);
+        return -1;
+    }
+
+    // If not, assume acceptation and create new game in game data
+    Game game;
+    create_game(&game, args[0], args[1]);
+
+    // TODO: save game in json file
+
+    return -1;
 }
 
 // TODO

@@ -125,8 +125,13 @@ int main() {
             continue;
         }
 
+        if (strcmp(input, "respond") == 0) {
+            respond(server_socket, username);
+            continue;
+        }
+
         if (strcmp(input, "play") == 0) {
-            resume(server_socket);
+            play(server_socket, username);
             continue;
         }
 

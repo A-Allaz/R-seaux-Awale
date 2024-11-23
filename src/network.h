@@ -49,11 +49,13 @@ int initialize_server(in_port_t port, struct sockaddr_in *serv_addr) {
 }
 
 typedef enum {
-    LOGIN,
-    CHALLENGE,
-    ACCEPT,
-    LIST,
-    MOVE
+    LOGIN,      // Log in
+    LIST,       // List all active players (excluding current user)
+    CHALLENGE,  // Challenge another player
+    ACCEPT,     // Accept a challenge request
+    DECLINE,    // Decline a challenge request
+    GAME,       // Retrieve a game
+    MOVE        // Make a move within a game
 } ACTION;
 
 typedef struct {
@@ -73,9 +75,11 @@ Request empty_request() {
 const char* action_to_string(ACTION action) {
     switch (action) {
         case LOGIN: return "LOGIN";
+        case LIST: return "LIST";
         case CHALLENGE: return "CHALLENGE";
         case ACCEPT: return "ACCEPT";
-        case LIST: return "LIST";
+        case DECLINE: return "DECLINE";
+        case GAME: return "GAME";
         case MOVE: return "MOVE";
         default: return NULL;
     }
@@ -84,12 +88,16 @@ const char* action_to_string(ACTION action) {
 int string_to_action(const char* action_str, ACTION* action) {
     if (strcmp(action_str, "LOGIN") == 0)
         *action = LOGIN;
+    else if (strcmp(action_str, "LIST") == 0)
+        *action = LIST;
     else if (strcmp(action_str, "CHALLENGE") == 0)
         *action = CHALLENGE;
     else if (strcmp(action_str, "ACCEPT") == 0)
         *action = ACCEPT;
-    else if (strcmp(action_str, "LIST") == 0)
-        *action = LIST;
+    else if (strcmp(action_str, "DECLINE") == 0)
+        *action = DECLINE;
+    else if (strcmp(action_str, "GAME") == 0)
+        *action = GAME;
     else if (strcmp(action_str, "MOVE") == 0)
         *action = MOVE;
     else

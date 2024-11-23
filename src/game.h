@@ -45,7 +45,6 @@ typedef struct {
 
 // Represent a single player
 typedef struct {
-    char name[MAX_NAME_LENGTH];
     char name[MAX_NAME_LENGTH + 1];
     bool online;
 } Player;

@@ -199,9 +199,22 @@ int challenge(int server, char* username) {
     return 0;
 }
 
-// TODO: Resume a game currently in progress. Return -1 if there is an error
-int resume(int server) {
+// TODO: Respond to a challenge request. Return -1 if there is an error
+int respond(int server, char* username) {
     printf("Not yet implemented\n");
+    // 1. Display all requests to be either accepted or declined
+    // 2. Pick a request from the list (in same way as in Challenge function)
+    // 3. Either accept or decline
+    // 4. If accepted, take user to play
+    return 0;
+}
+
+// TODO: Resume a game already established between two users. Return -1 if there is an error
+int play(int server, char* username) {
+    printf("Not yet implemented\n");
+    // 1. Display all the user's games
+    // 2. Pick a game from the list (in same way as in Challenge function)
+    // 3. play_game()
     return 0;
 }
 
@@ -210,7 +223,8 @@ void help() {
     printf("You can perform these actions whenever the prompt starts with 'AWALE //:'\n");
     printf("\u2022 help      - show this panel again\n");
     printf("\u2022 list      - list all currently online players\n");
-    printf("\u2022 challenge - challenge a player\n");
+    printf("\u2022 challenge - challenge a player to a game of Awalé\n");
+    printf("\u2022 respond   - accept/decline challenges received from other players\n");
     printf("\u2022 play      - start or resume a game\n");
     printf("\u2022 quit      - log out and quit\n");
 }

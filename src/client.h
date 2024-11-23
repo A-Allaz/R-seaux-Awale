@@ -269,7 +269,11 @@ int list(int server, char* username) {
     if (users == NULL) {
         return -1;
     }
-
+    if (len_users == 0) {
+        printf("There are no users online right now.\n");
+        free(users);
+        return 0;
+    }
     printf("Online users:\n");
     for (int i = 0; i < len_users; i++) {
         printf("\u2022 %s\n", users[i]);
@@ -285,6 +289,11 @@ int challenge(int server, char* username) {
     char** active_users = get_active_users(server, username, &len_users);
     if (active_users == NULL) {
         return -1;
+    }
+    if (len_users == 0) {
+        printf("There are no users online right now to challenge.\n");
+        free(active_users);
+        return 0;
     }
     printf("You can select a player to challenge from the below active users:\n");
     for (int i = 0; i < len_users; i++) {

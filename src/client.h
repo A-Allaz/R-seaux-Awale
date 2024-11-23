@@ -290,10 +290,9 @@ int challenge(int server, char* username) {
     for (int i = 0; i < len_users; i++) {
         printf("%d. %s\n", i+1, active_users[i]);
     }
-    printf("Select player number (1-%d)\n", len_users);
 
     // 2. Allow user to select a user
-    printf("CHALLENGE // Enter player name: ");
+    printf("CHALLENGE // Enter player number(1-%d): ", len_users);
 
     int choice;
     char input[BUFFER_SIZE];

@@ -49,7 +49,8 @@ int main() {
 
     printf("Connected to server at %s:%d\n", SERVER_IP, PORT_NO);
 
-    printf("Welcome to Awalé\n");
+    printf("Welcome to:\n");
+    printf("░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░\n░░      ░░░  ░░░░  ░░░      ░░░  ░░░░░░░░        ░\n▒  ▒▒▒▒  ▒▒  ▒  ▒  ▒▒  ▒▒▒▒  ▒▒  ▒▒▒▒▒▒▒▒  ▒▒▒▒▒▒▒\n▓  ▓▓▓▓  ▓▓        ▓▓  ▓▓▓▓  ▓▓  ▓▓▓▓▓▓▓▓      ▓▓▓\n█        ██   ██   ██        ██  ████████  ███████\n█  ████  ██  ████  ██  ████  ██        ██        █\n██████████████████████████████████████████████████\n");
 
     // 1. Log in
     char username[MAX_NAME_LENGTH + 2];  // +2 to account for '\n' and '\0'

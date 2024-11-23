@@ -138,6 +138,11 @@ int handle(int client_socket, const int pid) {
                 continue;
             }
 
+            case LIST_GAMES: {
+                get_all_games(client_socket, req.arguments, pid);
+                continue;
+            }
+
             case MOVE: {
                 move(client_socket, req.arguments, pid);
                 continue;

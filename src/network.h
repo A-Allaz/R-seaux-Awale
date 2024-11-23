@@ -55,6 +55,7 @@ typedef enum {
     ACCEPT,     // Accept a challenge request
     DECLINE,    // Decline a challenge request
     GAME,       // Retrieve a game
+    LIST_GAMES, // Retrieve all user's games
     MOVE        // Make a move within a game
 } ACTION;
 
@@ -80,6 +81,7 @@ const char* action_to_string(ACTION action) {
         case ACCEPT: return "ACCEPT";
         case DECLINE: return "DECLINE";
         case GAME: return "GAME";
+        case LIST_GAMES: return "LIST_GAMES";
         case MOVE: return "MOVE";
         default: return NULL;
     }
@@ -98,6 +100,8 @@ int string_to_action(const char* action_str, ACTION* action) {
         *action = DECLINE;
     else if (strcmp(action_str, "GAME") == 0)
         *action = GAME;
+    else if (strcmp(action_str, "LIST_GAMES") == 0)
+        *action = LIST_GAMES;
     else if (strcmp(action_str, "MOVE") == 0)
         *action = MOVE;
     else

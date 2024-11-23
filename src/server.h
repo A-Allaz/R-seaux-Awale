@@ -136,6 +136,50 @@ int get_game(int socket, char args[3][255], const int pid) {
     return 0;
 }
 
+int get_all_games(int socket, char args[3][255], const int pid) {
+    printf("%d LIST_GAMES for socket: %d\n", pid, socket);
+
+    GameData gameData;
+    if (parse_json(&gameData, JSON_FILENAME)) {
+        fprintf(stderr, "%d Error: Failed to parse JSON\n", pid);
+        return -1;
+    }
+
+    // Create a JSON array to hold players
+    cJSON *games = cJSON_CreateArray();
+
+
+    for (int i = 0; i < gameData.game_count; i++) {
+        if (strcmp(gameData.games[i].player0, args[0]) == 0) {
+            // Add the other player's name to the JSON array
+            cJSON_AddItemToArray(games, cJSON_CreateString(gameData.games[i].player1));
+        } else if (strcmp(gameData.games[i].player1, args[0]) == 0) {
+            // Add the other player's name to the JSON array
+            cJSON_AddItemToArray(games, cJSON_CreateString(gameData.games[i].player0));
+        }
+    }
+
+    // Serialize the JSON array to a string
+    char *jsonString = cJSON_PrintUnformatted(games);
+    cJSON_Delete(games); // Free JSON object memory
+
+    if (!jsonString) {
+        fprintf(stderr, "%d Error: Failed to serialize JSON\n", pid);
+        return -1;
+    }
+
+    // Send the JSON string to the client
+    size_t jsonStringLength = strlen(jsonString);
+    if (send(socket, jsonString, jsonStringLength, 0) == -1) {
+        fprintf(stderr, "%d Error: Failed to send online players list\n", pid);
+        free(jsonString);
+        return -1;
+    }
+
+    free(jsonString); // Free the serialized JSON string
+    return 0;
+}
+
 // Move your pieces given args: [user1, user2, move]. Return new game state as json
 int move(int socket, char args[3][255], const int pid) {
     printf("%d MOVE for socket: %d\n", pid, socket);

@@ -62,25 +62,6 @@ int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name, const int 
     return 0;
 }
 
-// TODO
-int challenge(int socket, char args[3][255], const int pid) {
-    printf("%d CHALLENGE for socket: %d\n", pid, socket);
-
-    // Check challenger is not same as recipient
-    if (strcmp(args[0], args[1]) == 0) {
-        send(socket, "false", 5, 0);
-        return -1;
-    }
-
-    return 0;
-}
-
-// TODO
-int accept_request(int socket, char args[3][255], const int pid) {
-    printf("%d ACCEPT for socket: %d\n", pid, socket);
-    return 0;
-}
-
 // Return all currently online users as json
 int list(int socket, char args[3][255], const int pid) {
     printf("%d LIST for socket: %d\n", pid, socket);
@@ -119,6 +100,39 @@ int list(int socket, char args[3][255], const int pid) {
     }
 
     free(jsonString); // Free the serialized JSON string
+    return 0;
+}
+
+// TODO
+int challenge(int socket, char args[3][255], const int pid) {
+    printf("%d CHALLENGE for socket: %d\n", pid, socket);
+
+    // Check challenger is not same as recipient
+    if (strcmp(args[0], args[1]) == 0) {
+        send(socket, "false", 5, 0);
+        return -1;
+    }
+
+    return 0;
+}
+
+// TODO
+int accept_request(int socket, char args[3][255], const int pid) {
+    printf("%d ACCEPT for socket: %d\n", pid, socket);
+    fprintf(stderr, "Not yet implemented\n");
+    return 0;
+}
+
+// TODO
+int decline(int socket, char args[3][255], const int pid) {
+    printf("%d DECLINE for socket: %d\n", pid, socket);
+    fprintf(stderr, "Not yet implemented\n");
+    return 0;
+}
+
+int get_game(int socket, char args[3][255], const int pid) {
+    printf("%d GAME for socket: %d\n", pid, socket);
+    fprintf(stderr, "Not yet implemented\n");
     return 0;
 }
 

@@ -17,6 +17,7 @@
 #define MAX_PLAYERS 100
 #define MAX_GAMES 100
 #define MAX_NAME_LENGTH 32
+#define MAX_BIO_LENGTH 80
 #define BOARD_SIZE 12
 #define JSON_FILENAME "game.json"
 
@@ -47,6 +48,10 @@ typedef struct {
 typedef struct {
     char name[MAX_NAME_LENGTH + 1];
     bool online;
+//    char bio[MAX_BIO_LENGTH + 1];
+//    int score;
+//    char received_requests[MAX_NAME_LENGTH + 1][MAX_PLAYERS - 1];
+//    char sent_requests[MAX_NAME_LENGTH + 1][MAX_PLAYERS - 1];
 } Player;
 
 // Represent the entire game data

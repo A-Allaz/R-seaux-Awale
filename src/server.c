@@ -112,6 +112,11 @@ int handle(int client_socket, const int pid) {
                 continue;
             }
 
+            case LIST: {
+                list(client_socket, req.arguments, pid);
+                continue;
+            }
+
             case CHALLENGE: {
                 challenge(client_socket, req.arguments, pid);
                 continue;
@@ -122,8 +127,14 @@ int handle(int client_socket, const int pid) {
                 continue;
             }
 
-            case LIST: {
-                list(client_socket, req.arguments, pid);
+            case DECLINE: {
+                decline(client_socket, req.arguments, pid);
+                continue;
+            }
+
+
+            case GAME: {
+                get_game(client_socket, req.arguments, pid);
                 continue;
             }
 

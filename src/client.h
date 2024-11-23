@@ -201,7 +201,7 @@ int challenge(int server, char* username) {
 
 // TODO: Respond to a challenge request. Return -1 if there is an error
 int respond(int server, char* username) {
-    printf("Not yet implemented\n");
+    fprintf(stderr, "Not yet implemented\n");
     // 1. Display all requests to be either accepted or declined
     // 2. Pick a request from the list (in same way as in Challenge function)
     // 3. Either accept or decline
@@ -211,7 +211,7 @@ int respond(int server, char* username) {
 
 // TODO: Resume a game already established between two users. Return -1 if there is an error
 int play(int server, char* username) {
-    printf("Not yet implemented\n");
+    fprintf(stderr, "Not yet implemented\n");
     // 1. Display all the user's games
     // 2. Pick a game from the list (in same way as in Challenge function)
     // 3. play_game()

@@ -65,6 +65,13 @@ int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name, const int 
 // TODO
 int challenge(int socket, char args[3][255], const int pid) {
     printf("%d CHALLENGE for socket: %d\n", pid, socket);
+
+    // Check challenger is not same as recipient
+    if (strcmp(args[0], args[1]) == 0) {
+        send(socket, "false", 5, 0);
+        return -1;
+    }
+
     return 0;
 }
 
@@ -75,7 +82,7 @@ int accept_request(int socket, char args[3][255], const int pid) {
 }
 
 // Return all currently online users as json
-int list(int socket, const int pid) {
+int list(int socket, char args[3][255], const int pid) {
     printf("%d LIST for socket: %d\n", pid, socket);
 
     GameData gameData;
@@ -88,7 +95,7 @@ int list(int socket, const int pid) {
     cJSON *onlinePlayers = cJSON_CreateArray();
 
     for (int i = 0; i < gameData.player_count; i++) {
-        if (gameData.players[i].online) {
+        if (gameData.players[i].online && strcmp(gameData.players[i].name, args[0]) != 0) {
             // Add the online player's name to the JSON array
             cJSON_AddItemToArray(onlinePlayers, cJSON_CreateString(gameData.players[i].name));
         }
@@ -134,7 +141,7 @@ int move(int socket, char args[3][255], const int pid) {
         return -1;
     }
 
-    int slot = convert_and_validate(args[2]);
+    int slot = convert_and_validate(args[2], 0, 12);
 
     if (slot < 0) {
         send(socket, "false", 5, 0);

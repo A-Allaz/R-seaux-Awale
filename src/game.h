@@ -36,8 +36,8 @@ typedef struct {
 
 // Represent a single game
 typedef struct {
-    char player0[MAX_NAME_LENGTH];
-    char player1[MAX_NAME_LENGTH];
+    char player0[MAX_NAME_LENGTH + 1];  // Allow for '/0'
+    char player1[MAX_NAME_LENGTH + 1];  // Allow for '/0'
     GAME_STATE current_state;
     Score score;
     int board[BOARD_SIZE];
@@ -46,6 +46,7 @@ typedef struct {
 // Represent a single player
 typedef struct {
     char name[MAX_NAME_LENGTH];
+    char name[MAX_NAME_LENGTH + 1];
     bool online;
 } Player;
 
@@ -68,7 +69,7 @@ int init_game(Game *game, const char* player0, const char* player1) {
     strcpy(game->player1, player1);
     game->current_state = MOVE_PLAYER_0;
     init_score(game);
-    for (int i = 0; i < 12; i++){
+    for (int i = 0; i < 12; i++) {
         game->board[i] = 4;
     }
     return 1;

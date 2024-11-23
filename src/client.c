@@ -116,16 +116,16 @@ int main() {
         }
 
         if (strcmp(input, "list") == 0) {
-            list(server_socket);
+            list(server_socket, username);
             continue;
         }
 
         if (strcmp(input, "challenge") == 0) {
-            challenge(server_socket);
+            challenge(server_socket, username);
             continue;
         }
 
-        if (strcmp(input, "resume") == 0) {
+        if (strcmp(input, "play") == 0) {
             resume(server_socket);
             continue;
         }
@@ -191,7 +191,7 @@ int main() {
                     continue;  // Skip the rest of the loop
                 }
 
-                int slot = convert_and_validate(input);
+                int slot = convert_and_validate(input, 0, 12);
                 if (slot < 0) {
                     // Clear the invalid input from stdin buffer
                     while (getchar() != '\n');

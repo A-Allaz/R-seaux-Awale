@@ -123,7 +123,7 @@ int handle(int client_socket, const int pid) {
             }
 
             case LIST: {
-                list(client_socket, pid);
+                list(client_socket, req.arguments, pid);
                 continue;
             }
 

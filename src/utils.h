@@ -78,7 +78,7 @@ int interactive_play(Game *game) {
 }
 
 // Check a given slot is valid for make_move()
-int convert_and_validate(const char *str) {
+int convert_and_validate(const char *str, const int min, const int max) {
     // Convert the string to a long integer using strtol
     char *endptr;
     long result = strtol(str, &endptr, 10);  // base 10
@@ -90,8 +90,8 @@ int convert_and_validate(const char *str) {
     }
 
     // Check for range: the number must be between 0 and 12
-    if (result < 0 || result > 12) {
-        printf("Error: The number must be between 0 and 12.\n");
+    if (result < min || result > max) {
+        printf("Error: The number must be between %d and %d.\n", min, max);
         return -1;
     }
 

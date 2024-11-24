@@ -8,72 +8,16 @@
 #include "utils.h"
 #include "network.h"
 
-//#define MAX_SOCKETS 15
-//
-//typedef struct {
-//    int client_socket;
-//    bool logged_in;
-//    char username[MAX_NAME_LENGTH];
-//} SocketDetail;
-//
-//void initialize_socket_details(SocketDetail* socket_details, pthread_mutex_t* mutex) {
-//    pthread_mutex_lock(mutex);
-//    for (int i = 0; i < MAX_SOCKETS; i++) {
-//        socket_details[i].client_socket = -1;
-//        socket_details[i].logged_in = false;
-//        socket_details[i].username[0] = '\0'; // Empty string
-//    }
-//    pthread_mutex_unlock(mutex);
-//}
-//
-//// Connect a username to a socket
-//int add_socket_detail(SocketDetail* socket_details, int client_socket, const char *username, pthread_mutex_t* mutex) {
-//    printf("Adding socket details with username: %s\n", username);
-//    pthread_mutex_lock(mutex);
-//    for (int i = 0; i < MAX_SOCKETS; i++) {
-//        // Sockets not logged in can be counted as empty (available)
-//        if (!socket_details[i].logged_in) {
-//            socket_details[i].client_socket = client_socket;
-//            strncpy(socket_details[i].username, username, MAX_NAME_LENGTH);
-//            socket_details[i].logged_in = true;
-//            pthread_mutex_unlock(mutex);
-//            printf("Success\n");
-//            return 0;
-//        }
-//    }
-//    pthread_mutex_unlock(mutex);
-//    return -1;
-//}
-//
-//// Logout of a socket to free up for a new connection
-//int logout_socket_detail(SocketDetail* socket_details, int client_socket, pthread_mutex_t* mutex) {
-//    pthread_mutex_lock(mutex);
-//    for (int i = 0; i < MAX_SOCKETS; i++) {
-//        if (socket_details[i].client_socket == client_socket) {
-//            socket_details[i].logged_in = false;
-//            pthread_mutex_unlock(mutex);
-//            return 0;
-//        }
-//    }
-//    pthread_mutex_unlock(mutex);
-//    return -1;
-//}
-//
-//// Attempt to find a socket for a given username
-//int find_socket(SocketDetail* socket_details, char* username, pthread_mutex_t* mutex) {
-//    pthread_mutex_lock(mutex);
-//    for (int i = 0; i < MAX_SOCKETS; i++) {
-//        if (strcmp(socket_details[i].username, username) == 0) {
-//            pthread_mutex_lock(mutex);
-//            return socket_details[i].client_socket;
-//        }
-//    }
-//    printf("Couldn't find socket with username: %s\n", username);
-//    pthread_mutex_unlock(mutex);
-//    return -1;
-//}
 
-// Create new username if it doesn't already exist and mark as active. Return true for success, false for error
+/**
+ * @brief Handles a login request by validating the username, updating player status, and saving changes.
+ *
+ * @param socket The client socket.
+ * @param args args[0] = The username the client is trying to log in with.
+ * @param name The string where the logged-in player's username will be stored if successful.
+ *
+ * @return int Returns 0 on successful login, or -1 if there is an error.
+ */
 int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name) {
     printf("%d LOGIN\n", socket);
 
@@ -127,7 +71,15 @@ int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name) {
     return 0;
 }
 
-// Return all currently online users as json
+
+/**
+ * @brief Retrieves and sends a list of online players, excluding a given username.
+ *
+ * @param socket The client socket.
+ * @param args args[0] = The username of the client requesting the list of online players.
+ *
+ * @return int Returns 0 on success, or -1 if there is an error.
+ */
 int list(int socket, char args[3][255]) {
     printf("%d LIST\n", socket);
 
@@ -168,6 +120,18 @@ int list(int socket, char args[3][255]) {
     return 0;
 }
 
+
+/**
+ * @brief Handles a challenge request to create a new game between two players.
+ *
+ * @param socket The client socket.
+ * @param args args[0] = The username of the player issuing the challenge,
+ * args[1] = The username of the player being challenged.
+ *
+ * @return int Returns 0 on success, or -1 if there is an error.
+ *
+ */
+// TODO: currently just creates a new game, should add a request to the person being challenged
 int challenge(int socket, char args[3][255]) {
     printf("%d CHALLENGE\n", socket);
 
@@ -219,12 +183,14 @@ int challenge(int socket, char args[3][255]) {
     return 0;
 }
 
+
 // TODO
 int accept_request(int socket, char args[3][255]) {
     printf("%d ACCEPT\n", socket);
     fprintf(stderr, "Not yet implemented\n");
     return 0;
 }
+
 
 // TODO
 int decline(int socket, char args[3][255]) {
@@ -233,7 +199,18 @@ int decline(int socket, char args[3][255]) {
     return 0;
 }
 
-// TODO: This still doesn't work
+
+/**
+ * @brief Retrieves the game state for the specified players and sends it to the client.
+ *
+ * @param socket The client socket.
+ * @param args args[0] = Player0's username, args[1] = Player1's username.
+ *
+ * @return int Returns 0 on success, or -1 on failure.
+ *
+ * @details If no game is found, or if any error occurs (e.g., JSON parsing or sending),
+ * an error message is logged, and "false" is sent to the client.
+ */
 int get_game(int socket, char args[3][255]) {
     printf("%d GAME\n", socket);
     GameData gameData;
@@ -260,8 +237,6 @@ int get_game(int socket, char args[3][255]) {
         return -1;
     }
 
-//    printf("Sending: %s\n", json_string);
-
     // Send the JSON string to the client
     if (send(socket, json_string, strlen(json_string), 0) == -1) {
         fprintf(stderr, "%d Error: Failed to send game state\n", socket);
@@ -273,6 +248,18 @@ int get_game(int socket, char args[3][255]) {
     return 0;
 }
 
+
+/**
+ * @brief Finds all the games a given user has and sends a list of the opponent names to the client.
+ *
+ * @param socket The client socket.
+ * @param args args[0] = Player's username.
+ *
+ * @return int Returns 0 on success, or -1 on failure.
+ *
+ * @details If any error occurs (e.g., JSON parsing or sending),
+ * an error message is logged, and "false" is sent to the client.
+ */
 int get_all_games(int socket, char args[3][255]) {
     printf("%d LIST_GAMES\n", socket);
 
@@ -317,7 +304,16 @@ int get_all_games(int socket, char args[3][255]) {
     return 0;
 }
 
-// Move your pieces given args: [user1, user2, move]. Return new game state as json
+
+/**
+ * @brief Handles a player's move in the game, updates the game state, and returns the updated state.
+ *
+ * @param socket The client socket.
+ * @param args args[0] = The player's username, args[1] = The opponent's username,
+ * args[2] = The move (slot number) as a string.
+ *
+ * @return int Returns 0 on success, or -1 on failure.
+ */
 int move(int socket, char args[3][255]) {
     printf("%d MOVE\n", socket);
 
@@ -374,26 +370,10 @@ int move(int socket, char args[3][255]) {
         return -1;
     }
 
-//    int opponent_socket = find_socket(socket_details, args[1], socket_details_mutex);
-//    printf("opponent socket found: %d", opponent_socket);
-//
-//    if (opponent_socket < 0) {
-//        fprintf(stderr, "%d Info: Other user is not logged in, cannot send new state to them.\n", socket);
-//        free(json_string);  // Free the string created by cJSON_Print
-//        return 0;
-//    }
-//
-//    // Send the JSON string to the other user
-//    if (send(opponent_socket, json_string, strlen(json_string), 0) == -1) {
-//        fprintf(stderr, "%d Error: Failed to send game state\n", socket);
-//        free(json_string);  // Free the string created by cJSON_Print
-//        return -1;
-//    }
-
-
     // Free the JSON objects after use
     free(json_string);  // Free the string created by cJSON_Print
     return 0;
 }
+
 
 #endif //AWALEGAME_SERVER_H

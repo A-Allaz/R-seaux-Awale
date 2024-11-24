@@ -8,7 +8,7 @@
 #include <string.h>
 #include "network.h"
 
-// Function to parse a JSON string into a dynamically allocated list of strings. Returned value needs to be freed
+// Parse a JSON string into a dynamically allocated list of strings. Returned value needs to be freed
 char** convert_name_string_to_list(const char *jsonString, int *item_count) {
     *item_count = 0;
 
@@ -57,6 +57,7 @@ char** convert_name_string_to_list(const char *jsonString, int *item_count) {
     return output;
 }
 
+// Perform request to get list of active users (with respect to a user)
 char** get_active_users(int server, char* username, int* no_users) {
     Request req = empty_request();
     req.action = LIST;
@@ -82,6 +83,7 @@ char** get_active_users(int server, char* username, int* no_users) {
     return res1;
 }
 
+// Perform request to get a list of a user's current games
 char** get_current_games(int server, char* username, int* no_users) {
     Request req = empty_request();
     req.action = LIST_GAMES;
@@ -107,7 +109,20 @@ char** get_current_games(int server, char* username, int* no_users) {
     return res1;
 }
 
-// TODO: (incomplete) Handle game presentation for client
+
+/**
+ * @brief Manages the game loop between the current user and the chosen opponent.
+ *
+ * @param server The server socket.
+ * @param username The username of the current player.
+ * @param chosen_user The username of the opponent.
+ *
+ * @return int Returns 0 upon successful completion of the game loop, or -1 if an error occurs.
+ *
+ * @note The game state is updated in a loop by polling the server every 2 seconds until a change is detected.
+ *  This times out after 10 refreshes.
+ *
+ */
 int play_game(int server, char* username, char* chosen_user) {
     printf("Resuming game against %s.\n", chosen_user);
 
@@ -249,7 +264,17 @@ int play_game(int server, char* username, char* chosen_user) {
     return 0;
 }
 
-// Attempt to log in. Return -1 if there is an error
+
+/**
+ * @brief Attempts to log in a user by sending a login request to the server.
+ *
+ * @param server The server socket.
+ * @param username The username of the user attempting to log in.
+ *
+ * @return int Returns 0 if login is successful, or -1 if an error occurs.
+ *
+ * @note The server is expected to respond with either "true" (successful login) or "false" (login failure).
+ */
 int login(int server, char* username) {
     Request req = empty_request();
     req.action = LOGIN;
@@ -275,7 +300,17 @@ int login(int server, char* username) {
     return 0;
 }
 
-// Attempt to show active users. Return -1 if there is an error
+
+/**
+ * @brief Retrieves and displays the list of active users from the server.
+ *
+ * @param server The server socket.
+ * @param username The username of the current user.
+ *
+ * @return int Returns 0 on success, or -1 if an error occurs.
+ *
+ * @note Memory allocated for the list of active users (array of strings) is dynamically managed and must be freed.
+ */
 int list(int server, char* username) {
     int len_users;
     char** users = get_active_users(server, username, &len_users);
@@ -296,6 +331,15 @@ int list(int server, char* username) {
     return 0;
 }
 
+
+/**
+ * @brief Allows the user to challenge another online player to a game.
+ *
+ * @param server The server socket.
+ * @param username The username of the current player initiating the challenge.
+ *
+ * @return int Returns 0 if the challenge is successfully sent and acknowledged, or -1 if an error occurs.
+ */
 int challenge(int server, char* username) {
     // 1. Show online active_users to choose from
     int len_users;
@@ -374,6 +418,7 @@ int challenge(int server, char* username) {
     return 0;
 }
 
+
 // TODO: Respond to a challenge request. Return -1 if there is an error
 int respond(int server, char* username) {
     fprintf(stderr, "Not yet implemented\n");
@@ -384,6 +429,15 @@ int respond(int server, char* username) {
     return 0;
 }
 
+
+/**
+ * @brief Facilitates user interaction to select and play one of their current games.
+ *
+ * @param server The socket used for communication with the server.
+ * @param username The username of the current player.
+ *
+ * @return int Returns 0 upon successful execution, or -1 if an error occurs.
+ */
 int play(int server, char* username) {
     // 1. Display all the user's games
     int len_games;
@@ -434,6 +488,9 @@ int play(int server, char* username) {
     return 0;
 }
 
+/**
+ * @brief Print out the possible commands that a user can perform
+ */
 void help() {
     printf("There are several actions you can perform once you have logged in.\n");
     printf("You can perform these actions whenever the prompt starts with 'AWALE //:'\n");
@@ -444,5 +501,6 @@ void help() {
     printf("\u2022 play      - start or resume a game\n");
     printf("\u2022 quit      - log out and quit\n");
 }
+
 
 #endif //AWALEGAME_CLIENT_H

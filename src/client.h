@@ -154,7 +154,7 @@ int play_game(int server, char* username, char* chosen_user) {
         if ((game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
                    (game.current_state == MOVE_PLAYER_1 && is_player0)) {
             printf("Waiting for other player to move\n");
-            break;
+            // break;
             // Await other player to make move
             if (receive_game(server, &game)) {
                 return -1;

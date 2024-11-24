@@ -137,7 +137,6 @@ int play_game(int server, char* username, char* chosen_user) {
     // 2. Await user's action (loops until game ends or user enters 'back')
     char input[BUFFER_SIZE];
     while (true) {
-        while (getchar() != '\n'); // Flush the input buffer
         clrscr();
 
         // Print stats out to user
@@ -145,19 +144,38 @@ int play_game(int server, char* username, char* chosen_user) {
         print_player_stats(&game, 1);
         print_board_state(&game);
 
-//        printf("is playing : %d\n", (game.current_state == MOVE_PLAYER_0 && is_player0) ||
-//            (game.current_state == MOVE_PLAYER_1 && ! is_player0));
-//        printf("is not playing : %d\n", (game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
-//            (game.current_state == MOVE_PLAYER_1 && is_player0));
-
         // Other player's turn
         if ((game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
                    (game.current_state == MOVE_PLAYER_1 && is_player0)) {
             printf("Waiting for other player to move\n");
-            break;
-            // Await other player to make move
-            if (receive_game(server, &game)) {
-                return -1;
+
+            // Loop every second to update game state to check for changes
+            GAME_STATE current_state = game.current_state;
+            int retry_count = 0;
+            const int max_retries = 10; // Allow 10 retries
+
+            while (current_state == game.current_state) {
+                if (retry_count++ >= max_retries) {
+                    printf("Timed out waiting for the other player's move.\n");
+                    return -1;
+                }
+
+                // Send request to server
+                Request req1 = empty_request();
+                req1.action = GAME;
+                strcpy(req1.arguments[0], username);
+                strcpy(req1.arguments[1], chosen_user);
+
+                if (send_request(server, &req1)) {
+                    fprintf(stderr, "Error: Could not send request.\n");
+                    return -1;
+                }
+
+                if (receive_game(server, &game)) {
+                    return -1;
+                }
+
+                sleep(2);
             }
             continue;
         }
@@ -193,6 +211,7 @@ int play_game(int server, char* username, char* chosen_user) {
         // Check if there is a trailing newline
         size_t len = strlen(input);
         if (len > 0 && input[len - 1] == '\n') {
+            while (getchar() != '\n' && getchar() != EOF);  // Clear the invalid input from stdin buffer
             input[len - 1] = '\0';  // Remove newline
         }
 
@@ -204,8 +223,6 @@ int play_game(int server, char* username, char* chosen_user) {
         // Get move from input
         int slot = convert_and_validate(input, 0, 12);
         if (slot < 0) {
-            // Clear the invalid input from stdin buffer
-            while (getchar() != '\n');
             printf("Invalid input! Please enter a number between 0 and 12.\n");
             continue;  // skip
         }

@@ -260,7 +260,7 @@ int get_game(int socket, char args[3][255]) {
         return -1;
     }
 
-    printf("Sending: %s\n", json_string);
+//    printf("Sending: %s\n", json_string);
 
     // Send the JSON string to the client
     if (send(socket, json_string, strlen(json_string), 0) == -1) {

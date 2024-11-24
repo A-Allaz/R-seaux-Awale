@@ -167,7 +167,7 @@ int play_game(int server, char* username, char* chosen_user) {
             // Loop every second to update game state to check for changes
             GAME_STATE current_state = game.current_state;
             int retry_count = 0;
-            const int max_retries = 10; // Allow 10 retries
+            const int max_retries = 100; // Allow 10 retries
 
             while (current_state == game.current_state) {
                 if (retry_count++ >= max_retries) {
@@ -197,7 +197,7 @@ int play_game(int server, char* username, char* chosen_user) {
 
         // Player has won
         if ((game.current_state == WIN_PLAYER_0 && is_player0) ||
-                 (game.current_state == WIN_PLAYER_1 && ! is_player0)) {
+            (game.current_state == WIN_PLAYER_1 && ! is_player0)) {
             printf("You have won!\n");
             break;
         }
@@ -228,7 +228,7 @@ int play_game(int server, char* username, char* chosen_user) {
         // Check if there is a trailing newline
         size_t len = strlen(input);
         if (len > 0 && input[len - 1] == '\n') {
-//            while (getchar() != '\n' && getchar() != EOF);  // Clear the invalid input from stdin buffer
+        // while (getchar() != '\n' && getchar() != EOF);  // Clear the invalid input from stdin buffer
             input[len - 1] = '\0';  // Remove newline
         }
 

@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 
 #define BUFFER_SIZE 1024
-#define PORT_NO 3001
+#define PORT_NO 3000
 #define MAX_ARG_LENGTH 255
 
 // Initialise server given port no, and socket address. If error, halts program

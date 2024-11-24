@@ -85,10 +85,9 @@ int init_game(Game *game, const char* player0, const char* player1) {
 int move_pebbles(Game* game, int slot) {
     const int pebbles = game->board[slot];
 
-    for (int i = 0; i < pebbles + 1;){
+    for (int i = 0; i < pebbles + 1; i++){
         if((slot + i + 1) % 12 != slot){
             game->board[(slot + i) % 12]++;
-            i++;
         }
     }
     game->board[slot] = 0;

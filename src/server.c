@@ -2,12 +2,17 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <errno.h>
+//#include <pthread.h>
 
 #include "game.h"
 #include "server.h"
 #include "network.h"
 
-int handle(int client_socket, int pid);
+//pthread_mutex_t socket_details_mutex = PTHREAD_MUTEX_INITIALIZER;
+//
+//SocketDetail socket_details[MAX_SOCKETS];
+
+int handle(int client_socket);
 
 int main() {
     int server_socket, client_socket;
@@ -46,6 +51,9 @@ int main() {
 
     printf("Server listening on port %d\n\n", PORT_NO);
 
+    // Initialise the socket_details list before sockets can connect
+//    initialize_socket_details(socket_details, &socket_details_mutex);
+
     // Wait for client to connect
     while (1) {
         addr_len = sizeof (cli_addr);
@@ -58,7 +66,19 @@ int main() {
             exit(errno);
         }
 
+//        int* new_socket = malloc(sizeof(int));
+//        *new_socket = client_socket;
+
+//        pthread_t thread_id;
+//        if (pthread_create(&thread_id, NULL, handle, (void *) new_socket) != 0) {
+//            perror("Thread creation failed");
+//            close(client_socket);
+//            free(new_socket);
+//        }
+//        pthread_detach(thread_id);
+
         // Fork into thread to handle asynchronously
+//        SocketDetail** details = (SocketDetail **) &socket_details;
         int pid = fork();
 
         // Error case
@@ -73,7 +93,8 @@ int main() {
         else if (pid == 0) {
             printf("Connection accepted, fork %d\n", pid);
             close(server_socket);
-            handle(client_socket, pid);
+//            handle(client_socket, *details);
+            handle(client_socket);
             close(client_socket);
             exit(0);  // Terminate child process
         }
@@ -91,14 +112,14 @@ int main() {
     return 0;
 }
 
-int handle(int client_socket, const int pid) {
+int handle(int client_socket) {
     bool logged_in = false;
     char username[MAX_NAME_LENGTH] = {'\0'};
 
     while (true) {
         Request req = empty_request();
         if (receive_request(client_socket, &req)) {
-            fprintf(stderr, "%d Error: could not get request\n", pid);
+            fprintf(stderr, "%d Error: could not get request\n", client_socket);
             break;
         }
 
@@ -106,45 +127,49 @@ int handle(int client_socket, const int pid) {
 
         switch (req.action) {
             case LOGIN: {
-                if (! login(client_socket, req.arguments, username, pid)) {
+                if (! login(client_socket, req.arguments, username)) {
                     logged_in = true;  // set logged_in flag to true on successful login
+//                    if (add_socket_detail(socket_details, client_socket, username, &socket_details_mutex)) {
+//                        fprintf(stderr, "%d Error: max sockets reached\n", client_socket);
+//                    }
                 }
                 continue;
             }
 
             case LIST: {
-                list(client_socket, req.arguments, pid);
+                list(client_socket, req.arguments);
                 continue;
             }
 
             case CHALLENGE: {
-                challenge(client_socket, req.arguments, pid);
+                challenge(client_socket, req.arguments);
                 continue;
             }
 
             case ACCEPT: {
-                accept_request(client_socket, req.arguments, pid);
+                accept_request(client_socket, req.arguments);
                 continue;
             }
 
             case DECLINE: {
-                decline(client_socket, req.arguments, pid);
+                decline(client_socket, req.arguments);
                 continue;
             }
 
 
             case GAME: {
-                get_game(client_socket, req.arguments, pid);
+                get_game(client_socket, req.arguments);
                 continue;
             }
 
             case LIST_GAMES: {
-                get_all_games(client_socket, req.arguments, pid);
+                get_all_games(client_socket, req.arguments);
                 continue;
             }
 
             case MOVE: {
-                move(client_socket, req.arguments, pid);
+//                move(client_socket, req.arguments, socket_details, &socket_details_mutex);
+                move(client_socket, req.arguments);
                 continue;
             }
         }
@@ -153,7 +178,10 @@ int handle(int client_socket, const int pid) {
     // Log out at end
     // Handle disconnection cleanup if user is logged in
     if (logged_in) {
-        printf("%d User %s disconnected, logging out\n", pid, username);
+        printf("%d User %s disconnected, logging out\n", client_socket, username);
+
+//        // Mark as logged out to free up space for new sockets
+//        logout_socket_detail(socket_details, client_socket, &socket_details_mutex);
 
         GameData gameData;
         if (parse_json(&gameData, "game.json") == 0) {
@@ -167,12 +195,12 @@ int handle(int client_socket, const int pid) {
 
             // Save updated game data to JSON
             if (save_to_json("game.json", &gameData) != 0) {
-                fprintf(stderr, "%d Error: Failed to save updated game data to JSON\n", pid);
+                fprintf(stderr, "%d Error: Failed to save updated game data to JSON\n", client_socket);
             } else {
-                printf("%d Successfully logged out user %s\n", pid, username);
+                printf("%d Successfully logged out user %s\n", client_socket, username);
             }
         } else {
-            fprintf(stderr, "%d Error: Failed to parse game data for logout\n", pid);
+            fprintf(stderr, "%d Error: Failed to parse game data for logout\n", client_socket);
         }
     }
 

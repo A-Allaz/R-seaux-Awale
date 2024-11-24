@@ -145,41 +145,44 @@ int play_game(int server, char* username, char* chosen_user) {
         print_player_stats(&game, 1);
         print_board_state(&game);
 
-        printf("is playing : %d\n", (game.current_state == MOVE_PLAYER_0 && is_player0) ||
-            (game.current_state == MOVE_PLAYER_1 && ! is_player0));
-        printf("is not playing : %d\n", (game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
-            (game.current_state == MOVE_PLAYER_1 && is_player0));
+//        printf("is playing : %d\n", (game.current_state == MOVE_PLAYER_0 && is_player0) ||
+//            (game.current_state == MOVE_PLAYER_1 && ! is_player0));
+//        printf("is not playing : %d\n", (game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
+//            (game.current_state == MOVE_PLAYER_1 && is_player0));
 
-        // Current player's turn
-        if ((game.current_state == MOVE_PLAYER_0 && is_player0) ||
-            (game.current_state == MOVE_PLAYER_1 && ! is_player0)) {
-            printf("GAME (enter 'back' to go home) // Choose your move: ");
-        } else if ((game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
-                   (game.current_state == MOVE_PLAYER_1 && is_player0)) {   // Other player's turn
+        // Other player's turn
+        if ((game.current_state == MOVE_PLAYER_0 && ! is_player0) ||
+                   (game.current_state == MOVE_PLAYER_1 && is_player0)) {
             printf("Waiting for other player to move\n");
-            
+            break;
+            // Await other player to make move
             if (receive_game(server, &game)) {
                 return -1;
             }
-            printf("Hello\n");
             continue;
         }
 
         // Player has won
-        else if ((game.current_state == WIN_PLAYER_0 && is_player0) ||
+        if ((game.current_state == WIN_PLAYER_0 && is_player0) ||
                  (game.current_state == WIN_PLAYER_1 && ! is_player0)) {
             printf("You have won!\n");
             break;
         }
 
         // Player has not won
-        else if (game.current_state == WIN_PLAYER_1 && is_player0) {
+        if (game.current_state == WIN_PLAYER_1 && is_player0) {
             printf("%s has won\n", game.player1);
             break;
         }
-        else if (game.current_state == WIN_PLAYER_0 && ! is_player0) {
+        if (game.current_state == WIN_PLAYER_0 && ! is_player0) {
             printf("%s has won!\n", game.player0);
             break;
+        }
+
+        // Current player's turn
+        if ((game.current_state == MOVE_PLAYER_0 && is_player0) ||
+            (game.current_state == MOVE_PLAYER_1 && ! is_player0)) {
+            printf("GAME (enter 'back' to go home) // Choose your move: ");
         }
 
         if (fgets(input, sizeof(input), stdin) == NULL) {

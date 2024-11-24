@@ -100,9 +100,9 @@ int main() {
         }
 
         // Main thread
-        else {
-            close(client_socket);
-        }
+        // else {
+        //     close(client_socket);
+        // }
 
     }
 

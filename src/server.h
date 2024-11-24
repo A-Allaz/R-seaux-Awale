@@ -97,6 +97,7 @@ int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name) {
         if (strcmp(gameData.players[i].name, args[0]) == 0) {
             // Username exists, set the player as online
             gameData.players[i].online = true;
+            gameData.players[i].socket = socket;
             userExists = true;
             break;
         }
@@ -107,6 +108,7 @@ int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name) {
         if (gameData.player_count < MAX_PLAYERS) {
             strcpy(gameData.players[gameData.player_count].name, args[0]);
             gameData.players[gameData.player_count].online = true;
+            gameData.players[gameData.player_count].socket = socket;
             gameData.player_count++; // Increment player count
         } else {
             fprintf(stderr, "%d Error: Player list is full\n", socket);

@@ -48,6 +48,7 @@ typedef struct {
 typedef struct {
     char name[MAX_NAME_LENGTH + 1];
     bool online;
+    int socket;
 //    char bio[MAX_BIO_LENGTH + 1];
 //    int score;
 //    char received_requests[MAX_NAME_LENGTH + 1][MAX_PLAYERS - 1];
@@ -297,10 +298,12 @@ int parse_json(GameData* gameData, const char *filename) {
             if (player && cJSON_IsObject(player)) {
                 cJSON *name = cJSON_GetObjectItem(player, "name");
                 cJSON *online = cJSON_GetObjectItem(player, "online");
+                cJSON *socket = cJSON_GetObjectItem(player, "socket");
 
                 if (name && cJSON_IsString(name) && online && cJSON_IsBool(online)) {
                     strncpy(gameData->players[i].name, name->valuestring, MAX_NAME_LENGTH);
                     gameData->players[i].online = online->valueint;
+                    gameData->players[i].socket = socket->valueint;
                 }
             }
         }
@@ -370,6 +373,7 @@ int save_to_json(const char *filename, const GameData *data) {
         cJSON *player = cJSON_CreateObject();
         cJSON_AddStringToObject(player, "name", data->players[i].name);
         cJSON_AddBoolToObject(player, "online", data->players[i].online);
+        cJSON_AddNumberToObject(player, "socket", data->players[i].socket);
         cJSON_AddItemToArray(players, player);
     }
     cJSON_AddItemToObject(json, "players", players);

@@ -30,9 +30,16 @@ Celui-ci vous identifie de manière unique et est stocké sur le serveur de jeu 
 Une fois connecté, vous pouvez effectuer plusieurs actions :
 
 - `list`       - liste de tous les joueurs actuellement en ligne
-- `challenge`  - défier un joueur (pour commencer une nouvelle partie)
-- `respond`	   - répondre aux défis des autres
+- `challenge`  - défier un joueur (pour commencer une nouvelle partie, affiche un message d'erreur mais crée bien une partie)
+- `respond`	   - répondre aux défis des autres (non implémenté)
 - `play`       - commence ou reprendre un jeu
 - `quit`       - se déconnecter et quitter (équivalent à terminer le programme)
 
 Vous pouvez effectuer ces actions en saisissant la commande correspondante.
+
+
+## Le jeu
+
+- Vous disposez de 100s pour jouer votre tour
+- Jouez en selectionnant la case dont vous souhaitez deplacer les pierres
+- Le calcul des points et de la victoire et automatique, vous pouvez cependant abandonner en cours de partie lors de votre tour

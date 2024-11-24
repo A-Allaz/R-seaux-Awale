@@ -17,7 +17,6 @@
 #define MAX_PLAYERS 100
 #define MAX_GAMES 100
 #define MAX_NAME_LENGTH 32
-#define MAX_BIO_LENGTH 80
 #define BOARD_SIZE 12
 #define JSON_FILENAME "game.json"
 
@@ -48,10 +47,6 @@ typedef struct {
 typedef struct {
     char name[MAX_NAME_LENGTH + 1];
     bool online;
-//    char bio[MAX_BIO_LENGTH + 1];
-//    int score;
-//    char received_requests[MAX_NAME_LENGTH + 1][MAX_PLAYERS - 1];
-//    char sent_requests[MAX_NAME_LENGTH + 1][MAX_PLAYERS - 1];
 } Player;
 
 // Represent the entire game data
@@ -79,7 +74,13 @@ int init_game(Game *game, const char* player0, const char* player1) {
     for (int i = 0; i < 12; i++) {
         game->board[i] = 4;
     }
-    return 1;
+    return 0;
+}
+
+int init_game_data(GameData* gameData) {
+    gameData->game_count = 0;
+    gameData->player_count = 0;
+    return 0;
 }
 
 int move_pebbles(Game* game, int slot) {
@@ -209,62 +210,11 @@ int print_player_stats(Game *game, int player) {
     return 0;
 }
 
-// Create game file if it doesn't exist already
-int createGameFile() {
-    // Create the root JSON object
-    cJSON *root = cJSON_CreateObject();
-    if (!root) {
-        fprintf(stderr, "Error creating JSON object\n");
-        return 1;
-    }
-
-    // Add empty arrays to the JSON object
-    cJSON *players = cJSON_CreateArray();
-    cJSON *active_players = cJSON_CreateArray();
-    cJSON *games = cJSON_CreateArray();
-
-    if (!players || !active_players || !games) {
-        fprintf(stderr, "Error creating JSON arrays\n");
-        cJSON_Delete(root);
-        return 1;
-    }
-
-    cJSON_AddItemToObject(root, "players", players);
-    cJSON_AddItemToObject(root, "active_players", active_players);
-    cJSON_AddItemToObject(root, "games", games);
-
-    // Convert the JSON object to a string
-    char *json_string = cJSON_Print(root);
-    if (!json_string) {
-        fprintf(stderr, "Error converting JSON object to string\n");
-        cJSON_Delete(root);
-        return 1;
-    }
-
-    // Write the JSON string to a file
-    FILE *file = fopen(JSON_FILENAME, "w");
-    if (!file) {
-        fprintf(stderr, "Error opening file for writing\n");
-        free(json_string);
-        cJSON_Delete(root);
-        return 1;
-    }
-
-    fprintf(file, "%s", json_string);
-    fclose(file);
-
-    // Free allocated memory
-    free(json_string);
-    cJSON_Delete(root);
-
-    return 0;
-}
-
 // Parse the JSON file into a GameData struct
 int parse_json(GameData* gameData, const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        perror("Error opening file");
+        perror("File doesn't exist\n");
         return 1;
     }
 

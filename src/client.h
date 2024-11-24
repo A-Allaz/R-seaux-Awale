@@ -9,7 +9,7 @@
 #include "network.h"
 
 // Parse a JSON string into a dynamically allocated list of strings. Returned value needs to be freed
-char** convert_name_string_to_list(const char *jsonString, int *item_count) {
+char** convert_name_string_to_list(const char* jsonString, int* item_count) {
     *item_count = 0;
 
     // Parse the JSON string

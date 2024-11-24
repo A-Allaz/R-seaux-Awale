@@ -184,7 +184,7 @@ int handle(int client_socket) {
 //        logout_socket_detail(socket_details, client_socket, &socket_details_mutex);
 
         GameData gameData;
-        if (parse_json(&gameData, "game.json") == 0) {
+        if (parse_json(&gameData, JSON_FILENAME) == 0) {
             // Mark the user as offline
             for (int i = 0; i < gameData.player_count; i++) {
                 if (strcmp(gameData.players[i].name, username) == 0) {
@@ -194,7 +194,7 @@ int handle(int client_socket) {
             }
 
             // Save updated game data to JSON
-            if (save_to_json("game.json", &gameData) != 0) {
+            if (save_to_json(JSON_FILENAME, &gameData) != 0) {
                 fprintf(stderr, "%d Error: Failed to save updated game data to JSON\n", client_socket);
             } else {
                 printf("%d Successfully logged out user %s\n", client_socket, username);

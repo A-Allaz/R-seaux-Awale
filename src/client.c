@@ -14,8 +14,6 @@
 #define SERVER_IP "127.0.0.1"
 
 int main() {
-    char player_name[255];
-
     int server_socket;
     struct sockaddr_in serv_addr;
 

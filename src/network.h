@@ -10,43 +10,8 @@
 #include <sys/socket.h>
 
 #define BUFFER_SIZE 1024
-#define PORT_NO 3000
+#define PORT_NO 3001
 #define MAX_ARG_LENGTH 255
-
-// Initialise server given port no, and socket address. If error, halts program
-int initialize_server(in_port_t port, struct sockaddr_in *serv_addr) {
-    int server_socket;
-
-    // Open socket
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket < 0) {
-        perror("Could not open socket");
-        exit(EXIT_FAILURE);
-    }
-
-    // Initialize server address structure
-    bzero((char *) serv_addr, sizeof(*serv_addr));
-    serv_addr->sin_family = AF_INET;
-    serv_addr->sin_addr.s_addr = INADDR_ANY;
-    serv_addr->sin_port = htons(port);
-
-    // Bind the socket to the address
-    if (bind(server_socket, (struct sockaddr *) serv_addr, sizeof(*serv_addr)) < 0) {
-        perror("Binding failed");
-        close(server_socket);
-        exit(EXIT_FAILURE);
-    }
-
-    // Start listening for connections
-    if (listen(server_socket, 5) < 0) {
-        perror("Listen failed");
-        close(server_socket);
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Server initialized and listening on port %d\n", port);
-    return server_socket;
-}
 
 typedef enum {
     LOGIN,      // Log in
@@ -218,7 +183,7 @@ int receive_request(int socket_from, Request* req) {
     memset(buffer, 0, BUFFER_SIZE);
 
     // Receive data from the socket_from
-    int bytes_received = recv(socket_from, buffer, BUFFER_SIZE - 1, 0);
+    ssize_t bytes_received = recv(socket_from, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received < 0) {
         perror("Error receiving data");
         return -1;
@@ -317,7 +282,7 @@ int receive_game(int socket, Game* game) {
     memset(buffer, 0, BUFFER_SIZE);
 
     // Receive the JSON string from the server
-    int bytes_received = recv(socket, buffer, BUFFER_SIZE - 1, 0);
+    ssize_t bytes_received = recv(socket, buffer, BUFFER_SIZE - 1, 0);
     if (bytes_received <= 0) {
         fprintf(stderr, "Error: Failed to receive game state\n");
         return -1;

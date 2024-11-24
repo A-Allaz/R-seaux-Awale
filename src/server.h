@@ -22,10 +22,8 @@ int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name) {
     printf("%d LOGIN\n", socket);
 
     GameData gameData;
-    if (parse_json(&gameData, "game.json")) {
-        fprintf(stderr, "%d Error: Failed to parse JSON\n", socket);
-        send(socket, "false", 5, 0);
-        return -1;
+    if (parse_json(&gameData, JSON_FILENAME)) {
+        init_game_data(&gameData);  // Fallback for if the file has gone missing
     }
 
     // Check that username is not longer than limit
@@ -60,7 +58,7 @@ int login(int socket, const char args[3][MAX_ARG_LENGTH], char* name) {
     }
 
     // Save the updated GameData back to the JSON file
-    if (save_to_json("game.json", &gameData)) {
+    if (save_to_json(JSON_FILENAME, &gameData)) {
         fprintf(stderr, "%d Error: Failed to save updated game data to JSON\n", socket);
         send(socket, "false", 5, 0);
         return -1;
@@ -84,7 +82,7 @@ int list(int socket, char args[3][255]) {
     printf("%d LIST\n", socket);
 
     GameData gameData;
-    if (parse_json(&gameData, "game.json")) {
+    if (parse_json(&gameData, JSON_FILENAME)) {
         fprintf(stderr, "%d Error: Failed to parse JSON\n", socket);
         return -1;
     }
@@ -143,7 +141,7 @@ int challenge(int socket, char args[3][255]) {
 
     // Get game data from json
     GameData gameData;
-    if (parse_json(&gameData, "game.json")) {
+    if (parse_json(&gameData, JSON_FILENAME)) {
         fprintf(stderr, "%d Error: Failed to parse JSON\n", socket);
         return -1;
     }
@@ -319,7 +317,7 @@ int move(int socket, char args[3][255]) {
 
     // Get game data
     GameData gameData;
-    if (parse_json(&gameData, "game.json")) {
+    if (parse_json(&gameData, JSON_FILENAME)) {
         fprintf(stderr, "%d Error: Failed to parse JSON\n", socket);
         send(socket, "false", 5, 0);
         return -1;

@@ -138,106 +138,12 @@ int main() {
 
         if (strcmp(input, "quit") == 0) {
             close(server_socket);
-            printf("Logged out");
+            printf("Logged out\n");
             break;
         }
 
         printf("Invalid command, please try again.\n");
         printf("(Enter help to see list of commands)\n");
-    }
-
-    // Ideally the program should end here when the user enters quit or something
-    return 0;
-
-    Game *game = malloc(sizeof(Game));
-    if (game == NULL) {
-        fprintf(stderr, "Memory allocation failed\n");
-        exit(EXIT_FAILURE); // Terminate the program with a failure status
-    }
-
-    printf("Enter your name: ");
-    if (fgets(player_name, sizeof(player_name), stdin)) {
-        // Remove trailing newline character if present
-        player_name[strcspn(player_name, "\n")] = '\0'; 
-    }
-
-    init_game(game, player_name, "Enemy");
-    
-    while (game->score.player0 < 25 && game->score.player1 < 25) {
-        clrscr();
-
-        if (game->current_state == WIN_PLAYER_0 || game->current_state == WIN_PLAYER_1) {
-            printf("GAME OVER\n");
-            if (game->current_state == WIN_PLAYER_0) {
-                printf("%s WINS\n", game->player0);
-            } else {
-                printf("%s WINS\n", game->player1);
-            }
-            free(game);
-            return 1;
-        }
-
-        print_player_stats(game, 0);
-        print_player_stats(game, 1);
-        print_board_state(game);
-
-        if ((game->current_state == MOVE_PLAYER_0 && !strcmp(game->player0, player_name)) ||
-            (game->current_state == MOVE_PLAYER_1 && !strcmp(game->player1, player_name))) {
-            printf("%s'S TURN\t", player_name);
-            printf("\033[0;93m"); // Yellow
-            printf("Surrender (0)\n");
-            printf("\033[0;94m"); // Blue
-            printf("=== Choose a slot (1 to 12): ===\n");
-            printf("\033[0;39m"); // White
-
-            while (1) {
-                char input[4];  // input doesn't need to be bigger than 3 chars
-                if (scanf("%3s", input) == -1) {
-                    perror("Error on input\n");
-                    continue;  // Skip the rest of the loop
-                }
-
-                int slot = convert_and_validate(input, 0, 12);
-                if (slot < 0) {
-                    // Clear the invalid input from stdin buffer
-                    while (getchar() != '\n');
-                    printf("Invalid input! Please enter a number between 0 and 12.\n");
-                    continue;  // Skip the rest of the loop
-                }
-
-                // Case : surrender
-                if (slot == 0) {
-                    int surrender;
-                    printf("SURRENDER ? (0: NO / 1: YES):\n");
-                    while (getchar() != '\n'); // Flush the input buffer
-                    while (1) {
-                        if (scanf("%d", &surrender) == 1 && (surrender == 0 || surrender == 1)) {
-                            break;
-                        } else {
-                            while (getchar() != '\n');
-                            printf("Wrong input, Please enter 0 or 1\n");
-                            printf("SURRENDER ? (0: NO / 1: YES):\n");
-                        }
-                    }
-                    if (surrender == 1) {
-                        game->current_state = WIN_PLAYER_1;
-                        break;
-                    } else if (surrender == 0) {
-                        break;
-                    }
-                }
-
-                if (slot >= 1) {
-                    play_turn(game, slot - 1);
-                    break;
-                }
-            }
-        } else {
-            printf("==== WAITING FOR %s TO PLAY ====\n", game->player1);
-            printf("waiting...\r\n");
-            sleep(3);
-            return 0;
-        }
     }
 
     return 0;

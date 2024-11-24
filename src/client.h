@@ -198,17 +198,17 @@ int play_game(int server, char* username, char* chosen_user) {
         // Player has won
         if ((game.current_state == WIN_PLAYER_0 && is_player0) ||
             (game.current_state == WIN_PLAYER_1 && ! is_player0)) {
-            printf("You have won!\n");
+            printf("GAME OVER: You have won!\n");
             break;
         }
 
         // Player has not won
         if (game.current_state == WIN_PLAYER_1 && is_player0) {
-            printf("%s has won\n", game.player1);
+            printf("GAME OVER: %s has won\n", game.player1);
             break;
         }
         if (game.current_state == WIN_PLAYER_0 && ! is_player0) {
-            printf("%s has won!\n", game.player0);
+            printf("GAME OVER: %s has won!\n", game.player0);
             break;
         }
 

@@ -215,7 +215,9 @@ int play_game(int server, char* username, char* chosen_user) {
         // Current player's turn
         if ((game.current_state == MOVE_PLAYER_0 && is_player0) ||
             (game.current_state == MOVE_PLAYER_1 && ! is_player0)) {
-            printf("GAME (enter 'back' to go home) // Choose your move: ");
+            printf("Choose a square (1-12) to empty seeds and distribute\n");
+            printf("(enter 'back' to go home) (enter 0 to surrender)\n");
+            printf("GAME //: ");
         }
 
         if (fgets(input, sizeof(input), stdin) == NULL) {
@@ -226,7 +228,7 @@ int play_game(int server, char* username, char* chosen_user) {
         // Check if there is a trailing newline
         size_t len = strlen(input);
         if (len > 0 && input[len - 1] == '\n') {
-            while (getchar() != '\n' && getchar() != EOF);  // Clear the invalid input from stdin buffer
+//            while (getchar() != '\n' && getchar() != EOF);  // Clear the invalid input from stdin buffer
             input[len - 1] = '\0';  // Remove newline
         }
 
@@ -235,6 +237,7 @@ int play_game(int server, char* username, char* chosen_user) {
             break;
         }
 
+        printf("Input: %s\n", input);
         // Get move from input
         int slot = convert_and_validate(input, 0, 12);
         if (slot < 0) {
@@ -242,12 +245,14 @@ int play_game(int server, char* username, char* chosen_user) {
             continue;  // skip
         }
 
-
+        printf("%d\n", slot);
         req = empty_request();
         req.action = MOVE;
         strcpy(req.arguments[0], username);
         strcpy(req.arguments[1], chosen_user);
         sprintf(req.arguments[2], "%d", slot);
+
+        printf("%s\n", req.arguments[2]);
 
         // Make move
         if (send_request(server, &req)) {
@@ -462,9 +467,15 @@ int play(int server, char* username) {
     int choice;
     char input[BUFFER_SIZE];
     while (true) {
-        if (scanf("%s", input) == -1) {
-            perror("Error on input\n");
-            continue;  // Skip the rest of the loop
+        if (fgets(input, sizeof(input), stdin) == NULL) {
+            printf("Error reading input.\n");
+            return 1;
+        }
+
+        // Check if there is a trailing newline
+        size_t len = strlen(input);
+        if (len > 0 && input[len - 1] == '\n') {
+            input[len - 1] = '\0';  // Remove newline
         }
 
         choice = convert_and_validate(input, 1, len_games);

@@ -332,7 +332,11 @@ int move(int socket, char args[3][255]) {
         return -1;
     }
 
+    printf("Slot before conversion: %s\n", args[2]);
+
     int slot = convert_and_validate(args[2], 0, 12);
+
+    printf("Slot: %d\n", slot);
 
     if (slot < 0) {
         send(socket, "false", 5, 0);
@@ -346,12 +350,21 @@ int move(int socket, char args[3][255]) {
         return -1;
     }
 
-    // Perform the player's turn
-    int has_won = play_turn(&gameData.games[index], slot - 1);
-    if (has_won && gameData.games[index].current_state == MOVE_PLAYER_0) {
-        gameData.games[index].current_state = WIN_PLAYER_0;
-    } else if (has_won && gameData.games[index].current_state == MOVE_PLAYER_1) {
-        gameData.games[index].current_state = WIN_PLAYER_1;
+    // Check if this is a surrender
+    if (slot == 0) {
+        if (gameData.games[index].current_state == MOVE_PLAYER_0) {
+            gameData.games[index].current_state = WIN_PLAYER_1;
+        } else if (gameData.games[index].current_state == MOVE_PLAYER_1) {
+            gameData.games[index].current_state = WIN_PLAYER_0;
+        }
+    } else {
+        // Perform the player's turn
+        int has_won = play_turn(&gameData.games[index], slot - 1);
+        if (has_won && gameData.games[index].current_state == MOVE_PLAYER_0) {
+            gameData.games[index].current_state = WIN_PLAYER_0;
+        } else if (has_won && gameData.games[index].current_state == MOVE_PLAYER_1) {
+            gameData.games[index].current_state = WIN_PLAYER_1;
+        }
     }
 
     // Save the updated game data back to the JSON file

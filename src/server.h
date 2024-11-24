@@ -370,21 +370,23 @@ int move(int socket, char args[3][255]) {
     char* json_string = game_to_json_string(&gameData.games[index]);
 
     // Send the JSON string to the client
+    printf("Sending: %s\n", json_string);
     if (send(socket, json_string, strlen(json_string), 0) == -1) {
         fprintf(stderr, "%d Error: Failed to send game state\n", socket);
         free(json_string);  // Free the string created by cJSON_Print
         return -1;
     }
     
-    for(int i =0; i < gameData.player_count; i++){
-        if(strcmp(gameData.players[i].name, gameData.games[index].player0) == 0 || strcmp(gameData.players[i].name, gameData.games[index].player1) == 0){
-            if (send(gameData.players[i].socket, json_string, strlen(json_string), 0) == -1) {
-                fprintf(stderr, "%d Error: Failed to send game state\n", gameData.players[i].socket);
-                free(json_string);  // Free the string created by cJSON_Print
-                return -1;
-            }
-        }
-    }
+    // for(int i =0; i < gameData.player_count; i++){
+    //     if(strcmp(gameData.players[i].name, gameData.games[index].player0) == 0 || strcmp(gameData.players[i].name, gameData.games[index].player1) == 0){
+    //         printf("Sending: %s\n", json_string);
+    //         if (send(gameData.players[i].socket, json_string, strlen(json_string), 0) == -1) {
+    //             fprintf(stderr, "%d Error: Failed to send game state\n", gameData.players[i].socket);
+    //             free(json_string);  // Free the string created by cJSON_Print
+    //             return -1;
+    //         }
+    //     }
+    // }
 
 //    int opponent_socket = find_socket(socket_details, args[1], socket_details_mutex);
 //    printf("opponent socket found: %d", opponent_socket);

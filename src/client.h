@@ -156,8 +156,26 @@ int play_game(int server, char* username, char* chosen_user) {
             printf("Waiting for other player to move\n");
             // break;
             // Await other player to make move
-            if (receive_game(server, &game)) {
-                return -1;
+            // if (receive_game(server, &game)) {
+            //     return -1;
+            // }
+            int current_state = game.current_state;
+
+            while(current_state == game.current_state){
+                Request req = empty_request();
+                req.action = GAME;
+                strcpy(req.arguments[0], username);
+                strcpy(req.arguments[1], chosen_user);
+
+                if (send_request(server, &req)) {
+                    fprintf(stderr, "Error: Could not send request.\n");
+                    return -1;
+                }
+                
+                if (receive_game(server, &game)) {
+                    return -1;
+                }
+                sleep(1);
             }
             continue;
         }

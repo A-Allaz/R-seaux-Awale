@@ -241,7 +241,7 @@ int play_game(int server, char* username, char* chosen_user) {
         // Get move from input
         int slot = convert_and_validate(input, 0, 12);
         if (slot < 0 || (is_player0 && slot > 6) || (!is_player0 && (slot < 7 && slot != 0))) {
-            printf("Invalid input! Please enter a number between %d and %d.\n", (is_player0 + 1) % 2 * 6 + 1, (is_player0 + 1) % 2 * 6 + 6));
+            printf("Invalid input! Please enter a number between %d and %d.\n", (is_player0 + 1) % 2 * 6 + 1, (is_player0 + 1) % 2 * 6 + 6);
             continue;  // skip
         }
 

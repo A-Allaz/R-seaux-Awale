@@ -2,83 +2,68 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <errno.h>
-//#include <pthread.h>
 
 #include "game.h"
 #include "server.h"
 #include "network.h"
 
-//pthread_mutex_t socket_details_mutex = PTHREAD_MUTEX_INITIALIZER;
-//
-//SocketDetail socket_details[MAX_SOCKETS];
-
 int handle(int client_socket);
 
-int main() {
+int main(int argc, char *argv[]) {
     int server_socket, client_socket;
-    socklen_t addr_len;
+    socklen_t clilen;
 
-    struct sockaddr_in cli_addr, serv_addr;
+    struct sockaddr_in cli_addr,serv_addr;
 
-    printf("Server starting...\n");
+    if (argc != 2)
+    {
+        printf("Usage: socket_server port\n");
+        exit(0);
+    }
+
+    printf ("Server starting...\n");
 
     // Open socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
-        perror("Could not open socket");
-        exit(EXIT_FAILURE);
+        printf("Error: Could not open socket\n");
+        exit(0);
     }
 
     // Initialise parameters
     bzero((char*) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serv_addr.sin_port = htons(PORT_NO);
+    serv_addr.sin_family       = AF_INET;
+    serv_addr.sin_addr.s_addr  = htonl(INADDR_ANY);
+    serv_addr.sin_port         = htons(atoi(argv[1]));
 
     // Bind the socket
     if (bind(server_socket, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-        perror("Error binding");
+        perror("Error binding\n");
         close(server_socket);
         exit(EXIT_FAILURE);
     }
 
     // Begin listening
     if (listen(server_socket, 5) < 0) {
-        perror("Error on listen");
+        perror("Error on listen\n");
         close(server_socket);
         exit(EXIT_FAILURE);
     }
 
-    printf("Server listening on port %d\n\n", PORT_NO);
-
-    // Initialise the socket_details list before sockets can connect
-//    initialize_socket_details(socket_details, &socket_details_mutex);
+    printf("Server listening on port %d\n", PORT_NO);
 
     // Wait for client to connect
     while (1) {
-        addr_len = sizeof (cli_addr);
+        clilen = sizeof (cli_addr);
 
         // Client connects, attempt to accept
-        client_socket = accept(server_socket, (struct sockaddr*) &cli_addr, &addr_len);
+        client_socket = accept(server_socket, (struct sockaddr*) &cli_addr, &clilen);
 
         if (client_socket < 0) {
             printf("Error accepting\n");
             exit(errno);
         }
 
-//        int* new_socket = malloc(sizeof(int));
-//        *new_socket = client_socket;
-
-//        pthread_t thread_id;
-//        if (pthread_create(&thread_id, NULL, handle, (void *) new_socket) != 0) {
-//            perror("Thread creation failed");
-//            close(client_socket);
-//            free(new_socket);
-//        }
-//        pthread_detach(thread_id);
-
-        // Fork into thread to handle asynchronously
-//        SocketDetail** details = (SocketDetail **) &socket_details;
         int pid = fork();
 
         // Error case
@@ -93,7 +78,6 @@ int main() {
         else if (pid == 0) {
             printf("Connection accepted, fork %d\n", pid);
             close(server_socket);
-//            handle(client_socket, *details);
             handle(client_socket);
             close(client_socket);
             exit(0);  // Terminate child process
@@ -129,9 +113,6 @@ int handle(int client_socket) {
             case LOGIN: {
                 if (! login(client_socket, req.arguments, username)) {
                     logged_in = true;  // set logged_in flag to true on successful login
-//                    if (add_socket_detail(socket_details, client_socket, username, &socket_details_mutex)) {
-//                        fprintf(stderr, "%d Error: max sockets reached\n", client_socket);
-//                    }
                 }
                 continue;
             }
@@ -168,7 +149,6 @@ int handle(int client_socket) {
             }
 
             case MOVE: {
-//                move(client_socket, req.arguments, socket_details, &socket_details_mutex);
                 move(client_socket, req.arguments);
                 continue;
             }
@@ -179,10 +159,6 @@ int handle(int client_socket) {
     // Handle disconnection cleanup if user is logged in
     if (logged_in) {
         printf("%d User %s disconnected, logging out\n", client_socket, username);
-
-//        // Mark as logged out to free up space for new sockets
-//        logout_socket_detail(socket_details, client_socket, &socket_details_mutex);
-
         GameData gameData;
         if (parse_json(&gameData, JSON_FILENAME) == 0) {
             // Mark the user as offline

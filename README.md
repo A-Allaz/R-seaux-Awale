@@ -17,8 +17,10 @@ Cela produit deux fichiers exécutables : ___awale_server___ et ___awale_client_
 
 Pour démarrer le jeu :
 
-1.	Démarrer le serveur (exécuter ___awale_server___)
-2.	Démarrer le jeu (exécuter ___awale_client___)
+1.	Démarrer le serveur : `awale_server <port_no>`
+2.	Démarrer le jeu : `awale_client <server_ip_address> <port_no>`
+
+_Note: le numéro de port doit être le même pour le serveur et le client._
 
 
 ## Les fonctionnalités implémentées

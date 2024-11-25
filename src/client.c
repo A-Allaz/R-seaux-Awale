@@ -13,23 +13,27 @@
 
 #define SERVER_IP "127.0.0.1"
 
-int main() {
-    int server_socket;
+int main(int argc, char** argv) {
+    if (argc != 3) {
+        printf("Usage: socket_client server port\n");
+        exit(0);
+    }
+
+    // Initialise parameters
     struct sockaddr_in serv_addr;
+    bzero((char*) &serv_addr, sizeof(serv_addr));
+    serv_addr.sin_family       = AF_INET;
+    serv_addr.sin_addr.s_addr  = inet_addr(argv[1]);
+    serv_addr.sin_port         = htons(atoi(argv[2]));
 
     printf("Client starting...\n");
 
     // Create the socket
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
         perror("Could not open socket\n");
         exit(EXIT_FAILURE);
     }
-
-    // Set up the server address struct
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT_NO);
 
     // Convert the server IP address
     if (inet_pton(AF_INET, SERVER_IP, &serv_addr.sin_addr) <= 0) {

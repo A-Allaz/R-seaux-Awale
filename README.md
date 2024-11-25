@@ -9,9 +9,9 @@ Pour compiler le code source :
 
 1. Ouvrir un terminal dans le répertoire racine du projet.
 
-2. Générer les fichiers build : `cmake -S . -B build`
+2. Générer les fichiers build : `cmake CMakeLists.txt`
 
-3. Build (compiler) le project : `cmake --build build`
+3. Build (compiler) le project : `make`
 
 Cela produit deux fichiers exécutables : ___awale_server___ et ___awale_client___.
 
@@ -40,6 +40,6 @@ Vous pouvez effectuer ces actions en saisissant la commande correspondante.
 
 ## Le jeu
 
-- Vous disposez de 100s pour jouer votre tour
-- Jouez en selectionnant la case dont vous souhaitez deplacer les pierres
-- Le calcul des points et de la victoire et automatique, vous pouvez cependant abandonner en cours de partie lors de votre tour
+- Jouez en selectionnant la case dont vous souhaitez deplacer les pierres.
+
+- Le calcul des points et de la victoire est automatique, vous pouvez cependant abandonner en cours de partie lors de votre tour.
